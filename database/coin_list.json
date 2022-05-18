@@ -1,153 +1,225 @@
 {
-    "Binance_BUSD_HALAL":["LUNA/USDT",
-"ETH/USDT",
-"IDEX/USDT",
-"GMT/USDT",
-"SOL/USDT",
-"UST/USDT",
-"APE/USDT",
-"AVAX/USDT",
-"ADA/USDT",
-"DOT/USDT",
-"XRP/USDT",
-"SHIB/USDT",
-"GAL/USDT",
-"NEAR/USDT",
-"JASMY/USDT",
-"LAZIO/USDT",
-"DOGE/USDT",
-"EUR/USDT",
-"AXS/USDT",
-"GALA/USDT",
-"ROSE/USDT",
-"PSG/USDT",
-"DAR/USDT",
-"ICP/USDT",
-"LTC/USDT",
-"SLP/USDT",
-"ENS/USDT",
-"TRX/USDT",
-"ZIL/USDT",
-"EGLD/USDT",
-"MANA/USDT",
-"ALICE/USDT",
-"KDA/USDT",
-"PORTO/USDT",
-"MBOX/USDT",
-"ALGO/USDT",
-"SYS/USDT",
-"WAVES/USDT",
-"ZEC/USDT",
-"CITY/USDT",
-"GLMR/USDT",
-"ACM/USDT",
-"XMR/USDT",
-"JUV/USDT",
-"BAR/USDT",
-"LOKA/USDT",
-"PYR/USDT",
-"ASTR/USDT",
-"VOXEL/USDT",
-"XEC/USDT",
-"EOS/USDT",
-"KP3R/USDT",
-"XLM/USDT",
-"ATM/USDT",
-"GRT/USDT",
-"AR/USDT",
-"ETC/USDT",
-"OGN/USDT",
-"MLN/USDT",
-"DASH/USDT",
-"REN/USDT",
-"HIGH/USDT",
-"MTL/USDT",
-"SCRT/USDT",
-"DF/USDT",
-"COCOS/USDT",
-"CKB/USDT",
-"ICX/USDT",
-"MBL/USDT",
-"SRM/USDT",
-"SNX/USDT",
-"IOTA/USDT",
-"FLUX/USDT",
-"MOB/USDT",
-"ATA/USDT",
-"STMX/USDT",
-"API3/USDT",
-"YGG/USDT",
-"MULTI/USDT",
-"RAD/USDT",
-"DNT/USDT",
-"ADX/USDT",
-"SKL/USDT",
-"RVN/USDT",
-"NULS/USDT",
-"IQ/USDT",
-"SC/USDT",
-"LPT/USDT",
-"ELF/USDT",
-"OMG/USDT",
-"BADGER/USDT",
-"NMR/USDT",
-"ORN/USDT",
-"HIVE/USDT",
-"ZRX/USDT",
-"JST/USDT",
-"FIDA/USDT",
-"STORJ/USDT",
-"TOMO/USDT",
-"QUICK/USDT",
-"ONT/USDT",
-"XNO/USDT",
-"STX/USDT",
-"QTUM/USDT",
-"PLA/USDT",
-"TORN/USDT",
-"T/USDT",
-"BTG/USDT",
-"GHST/USDT",
-"LSK/USDT",
-"EPS/USDT"]
-    "kucoin_top30":[
-        "BTC/USDT",
-        "ETH/USDT",
-        "LUNA/USDT",
-        "ATOM/USDT",
-        "FTM/USDT",
-        "ADA/USDT",
-        "MATIC/USDT",
-        "NEAR/USDT",
-        "AVAX/USDT",
-        "DOT/USDT",
-        "BNB/USDT",
-        "ONE/USDT",
-        "SOL/USDT",
-        "ROSE/USDT",
-        "XRP/USDT",
-        "LINK/USDT",
-        "GLMR/USDT",
-        "SHIB/USDT",
-        "VRA/USDT",
-        "QNT/USDT",
-        "SAND/USDT",
-        "FLUX/USDT",
-        "THETA/USDT",
-        "KCS/USDT",
-        "LTC/USDT",
-        "DYDX/USDT",
-        "MANA/USDT",
-        "CRO/USDT",
-        "LRC/USDT",
-        "TRX/USDT",
-        "XLM/USDT",
-        "DOGE/USDT",
-        "CRV/USDT",
-        "ALGO/USDT",
-        "AAVE/USDT",
-        "ENJ/USDT"
-    ],
+    "Binance_USDR_HALAL": ["LUNA/USDT"
+    "ETH/USDT"
+    "GMT/USDT"
+    "UST/USDT"
+    "SOL/USDT"
+    "APE/USDT"
+    "XRP/USDT"
+    "IDEX/USDT"
+    "AVAX/USDT"
+    "DOT/USDT"
+    "ADA/USDT"
+    "JASMY/USDT"
+    "TRX/USDT"
+    "NEAR/USDT"
+    "AXS/USDT"
+    "GAL/USDT"
+    "GALA/USDT"
+    "SHIB/USDT"
+    "ZIL/USDT"
+    "ENS/USDT"
+    "DOGE/USDT"
+    "LTC/USDT"
+    "EUR/USDT"
+    "MANA/USDT"
+    "DAR/USDT"
+    "WAVES/USDT"
+    "LAZIO/USDT"
+    "ALICE/USDT"
+    "ROSE/USDT"
+    "ZEC/USDT"
+    "ALGO/USDT"
+    "GRT/USDT"
+    "PSG/USDT"
+    "SLP/USDT"
+    "EOS/USDT"
+    "PORTO/USDT"
+    "ICP/USDT"
+    "EGLD/USDT"
+    "XMR/USDT"
+    "KDA/USDT"
+    "ETC/USDT"
+    "MBOX/USDT"
+    "OGN/USDT"
+    "AR/USDT"
+    "GLMR/USDT"
+    "LOKA/USDT"
+    "XLM/USDT"
+    "MTL/USDT"
+    "SNX/USDT"
+    "PYR/USDT"
+    "DASH/USDT"
+    "CITY/USDT"
+    "ASTR/USDT"
+    "IOTA/USDT"
+    "ACM/USDT"
+    "BAR/USDT"
+    "JUV/USDT"
+    "SYS/USDT"
+    "RVN/USDT"
+    "MBL/USDT"
+    "REN/USDT"
+    "JST/USDT"
+    "OMG/USDT"
+    "ATM/USDT"
+    "XEC/USDT"
+    "STORJ/USDT"
+    "ZRX/USDT"
+    "SRM/USDT"
+    "ICX/USDT"
+    "API3/USDT"
+    "ONT/USDT"
+    "SKL/USDT"
+    "MULTI/USDT"
+    "QTUM/USDT"
+    "COCOS/USDT"
+    "VOXEL/USDT"
+    "HIVE/USDT"
+    "KP3R/USDT"
+    "ATA/USDT"
+    "STMX/USDT"
+    "ADX/USDT"
+    "HIGH/USDT"
+    "NULS/USDT"
+    "MLN/USDT"
+    "YGG/USDT"
+    "SC/USDT"
+    "CKB/USDT"
+    "TOMO/USDT"
+    "STX/USDT"
+    "FLUX/USDT"
+    "DNT/USDT"
+    "ORN/USDT"
+    "PLA/USDT"
+    "BADGER/USDT"
+    "DF/USDT"
+    "MOB/USDT"
+    "LPT/USDT"
+    "SCRT/USDT"
+    "RAD/USDT"
+    "NMR/USDT"
+    "ELF/USDT"
+    "TORN/USDT"
+    "T/USDT"
+    "QUICK/USDT"
+    "LSK/USDT"
+    "FIDA/USDT"
+    "XNO/USDT"
+    "BTG/USDT"
+    "GHST/USDT"
+    "EPS/USDT"],
+    "Binance_BUSD_HALAL"["LUNA/BUSD",
+    "ETH/BUSD",
+    "IDEX/BUSD",
+    "GMT/BUSD",
+    "SOL/BUSD",
+    "UST/BUSD",
+    "APE/BUSD",
+    "AVAX/BUSD",
+    "ADA/BUSD",
+    "DOT/BUSD",
+    "XRP/BUSD",
+    "SHIB/BUSD",
+    "GAL/BUSD",
+    "NEAR/BUSD",
+    "JASMY/BUSD",
+    "LAZIO/BUSD",
+    "DOGE/BUSD",
+    "EUR/BUSD",
+    "AXS/BUSD",
+    "GALA/BUSD",
+    "ROSE/BUSD",
+    "PSG/BUSD",
+    "DAR/BUSD",
+    "ICP/BUSD",
+    "LTC/BUSD",
+    "SLP/BUSD",
+    "ENS/BUSD",
+    "TRX/BUSD",
+    "ZIL/BUSD",
+    "EGLD/BUSD",
+    "MANA/BUSD",
+    "ALICE/BUSD",
+    "KDA/BUSD",
+    "PORTO/BUSD",
+    "MBOX/BUSD",
+    "ALGO/BUSD",
+    "SYS/BUSD",
+    "WAVES/BUSD",
+    "ZEC/BUSD",
+    "CITY/BUSD",
+    "GLMR/BUSD",
+    "ACM/BUSD",
+    "XMR/BUSD",
+    "JUV/BUSD",
+    "BAR/BUSD",
+    "LOKA/BUSD",
+    "PYR/BUSD",
+    "ASTR/BUSD",
+    "VOXEL/BUSD",
+    "XEC/BUSD",
+    "EOS/BUSD",
+    "KP3R/BUSD",
+    "XLM/BUSD",
+    "ATM/BUSD",
+    "GRT/BUSD",
+    "AR/BUSD",
+    "ETC/BUSD",
+    "OGN/BUSD",
+    "MLN/BUSD",
+    "DASH/BUSD",
+    "REN/BUSD",
+    "HIGH/BUSD",
+    "MTL/BUSD",
+    "SCRT/BUSD",
+    "DF/BUSD",
+    "COCOS/BUSD",
+    "CKB/BUSD",
+    "ICX/BUSD",
+    "MBL/BUSD",
+    "SRM/BUSD",
+    "SNX/BUSD",
+    "IOTA/BUSD",
+    "FLUX/BUSD",
+    "MOB/BUSD",
+    "ATA/BUSD",
+    "STMX/BUSD",
+    "API3/BUSD",
+    "YGG/BUSD",
+    "MULTI/BUSD",
+    "RAD/BUSD",
+    "DNT/BUSD",
+    "ADX/BUSD",
+    "SKL/BUSD",
+    "RVN/BUSD",
+    "NULS/BUSD",
+    "IQ/BUSD",
+    "SC/BUSD",
+    "LPT/BUSD",
+    "ELF/BUSD",
+    "OMG/BUSD",
+    "BADGER/BUSD",
+    "NMR/BUSD",
+    "ORN/BUSD",
+    "HIVE/BUSD",
+    "ZRX/BUSD",
+    "JST/BUSD",
+    "FIDA/BUSD",
+    "STORJ/BUSD",
+    "TOMO/BUSD",
+    "QUICK/BUSD",
+    "ONT/BUSD",
+    "XNO/BUSD",
+    "STX/BUSD",
+    "QTUM/BUSD",
+    "PLA/BUSD",
+    "TORN/BUSD",
+    "T/BUSD",
+    "BTG/BUSD",
+    "GHST/BUSD",
+    "LSK/BUSD",
+    "EPS/BUSD"],
 
     "ftx_main_list" : [
         "BTC/USD",
