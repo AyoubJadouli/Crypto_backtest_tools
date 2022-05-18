@@ -140,7 +140,7 @@ let exchange = new ccxt.binance({ enableRateLimit: true })
 pair_list = coin_list['Binance_USDT_HALAL']
 
 // --- Edit timeframe list and start date here ---
-timeframe_list = ['1m','5m','15m','1h','4h','1d']
+timeframe_list = ['5m','15m','1h','4h','1d']
 start_date = "01-06-2017"
 
 
