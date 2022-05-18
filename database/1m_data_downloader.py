@@ -4,7 +4,7 @@ const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 const exchange_limit = JSON.parse(fs.readFileSync('./database/exchange_limit.json', 'utf8'));
 const tf_ms = JSON.parse(fs.readFileSync('./database/tf_ms.json', 'utf8'));
 const coin_list = JSON.parse(fs.readFileSync('./database/coin_list.json', 'utf8'));
-const minimazed_data_load_exchange_limit = 50
+const minimazed_data_load_exchange_limit = 1000
 function date_to_timestamp(my_date) {
     my_date = my_date.split("-");
     let newDate = new Date(Date.UTC(my_date[2], my_date[1] - 1, my_date[0]));
@@ -140,8 +140,8 @@ let exchange = new ccxt.binance({ enableRateLimit: true })
 pair_list = coin_list['Binance_USDT_HALAL']
 
 // --- Edit timeframe list and start date here ---
-timeframe_list = ['2m']
-start_date = "01-06-2017"
+timeframe_list = ['1m']
+start_date = "01-07-2020"
 
 
 get_multi_ohlcv(
