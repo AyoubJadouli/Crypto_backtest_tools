@@ -1,114 +1,115 @@
 {
-    "Binance_USDT_HALAL": ["LUNA/USDT"
-    "ETH/USDT"
-    "GMT/USDT"
-    "UST/USDT"
-    "SOL/USDT"
-    "APE/USDT"
-    "XRP/USDT"
-    "IDEX/USDT"
-    "AVAX/USDT"
-    "DOT/USDT"
-    "ADA/USDT"
-    "JASMY/USDT"
-    "TRX/USDT"
-    "NEAR/USDT"
-    "AXS/USDT"
-    "GAL/USDT"
-    "GALA/USDT"
-    "SHIB/USDT"
-    "ZIL/USDT"
-    "ENS/USDT"
-    "DOGE/USDT"
-    "LTC/USDT"
-    "EUR/USDT"
-    "MANA/USDT"
-    "DAR/USDT"
-    "WAVES/USDT"
-    "LAZIO/USDT"
-    "ALICE/USDT"
-    "ROSE/USDT"
-    "ZEC/USDT"
-    "ALGO/USDT"
-    "GRT/USDT"
-    "PSG/USDT"
-    "SLP/USDT"
-    "EOS/USDT"
-    "PORTO/USDT"
-    "ICP/USDT"
-    "EGLD/USDT"
-    "XMR/USDT"
-    "KDA/USDT"
-    "ETC/USDT"
-    "MBOX/USDT"
-    "OGN/USDT"
-    "AR/USDT"
-    "GLMR/USDT"
-    "LOKA/USDT"
-    "XLM/USDT"
-    "MTL/USDT"
-    "SNX/USDT"
-    "PYR/USDT"
-    "DASH/USDT"
-    "CITY/USDT"
-    "ASTR/USDT"
-    "IOTA/USDT"
-    "ACM/USDT"
-    "BAR/USDT"
-    "JUV/USDT"
-    "SYS/USDT"
-    "RVN/USDT"
-    "MBL/USDT"
-    "REN/USDT"
-    "JST/USDT"
-    "OMG/USDT"
-    "ATM/USDT"
-    "XEC/USDT"
-    "STORJ/USDT"
-    "ZRX/USDT"
-    "SRM/USDT"
-    "ICX/USDT"
-    "API3/USDT"
-    "ONT/USDT"
-    "SKL/USDT"
-    "MULTI/USDT"
-    "QTUM/USDT"
-    "COCOS/USDT"
-    "VOXEL/USDT"
-    "HIVE/USDT"
-    "KP3R/USDT"
-    "ATA/USDT"
-    "STMX/USDT"
-    "ADX/USDT"
-    "HIGH/USDT"
-    "NULS/USDT"
-    "MLN/USDT"
-    "YGG/USDT"
-    "SC/USDT"
-    "CKB/USDT"
-    "TOMO/USDT"
-    "STX/USDT"
-    "FLUX/USDT"
-    "DNT/USDT"
-    "ORN/USDT"
-    "PLA/USDT"
-    "BADGER/USDT"
-    "DF/USDT"
-    "MOB/USDT"
-    "LPT/USDT"
-    "SCRT/USDT"
-    "RAD/USDT"
-    "NMR/USDT"
-    "ELF/USDT"
-    "TORN/USDT"
-    "T/USDT"
-    "QUICK/USDT"
-    "LSK/USDT"
-    "FIDA/USDT"
-    "XNO/USDT"
-    "BTG/USDT"
-    "GHST/USDT"
-    "EPS/USDT"],
+    "Binance_USDT_HALAL": ["LUNA/USDT",
+"ETH/USDT",
+"GMT/USDT",
+"UST/USDT",
+"SOL/USDT",
+"APE/USDT",
+"XRP/USDT",
+"IDEX/USDT",
+"AVAX/USDT",
+"DOT/USDT",
+"ADA/USDT",
+"JASMY/USDT",
+"TRX/USDT",
+"NEAR/USDT",
+"AXS/USDT",
+"GAL/USDT",
+"GALA/USDT",
+"SHIB/USDT",
+"ZIL/USDT",
+"ENS/USDT",
+"DOGE/USDT",
+"LTC/USDT",
+"EUR/USDT",
+"MANA/USDT",
+"DAR/USDT",
+"WAVES/USDT",
+"LAZIO/USDT",
+"ALICE/USDT",
+"ROSE/USDT",
+"ZEC/USDT",
+"ALGO/USDT",
+"GRT/USDT",
+"PSG/USDT",
+"SLP/USDT",
+"EOS/USDT",
+"PORTO/USDT",
+"ICP/USDT",
+"EGLD/USDT",
+"XMR/USDT",
+"KDA/USDT",
+"ETC/USDT",
+"MBOX/USDT",
+"OGN/USDT",
+"AR/USDT",
+"GLMR/USDT",
+"LOKA/USDT",
+"XLM/USDT",
+"MTL/USDT",
+"SNX/USDT",
+"PYR/USDT",
+"DASH/USDT",
+"CITY/USDT",
+"ASTR/USDT",
+"IOTA/USDT",
+"ACM/USDT",
+"BAR/USDT",
+"JUV/USDT",
+"SYS/USDT",
+"RVN/USDT",
+"MBL/USDT",
+"REN/USDT",
+"JST/USDT",
+"OMG/USDT",
+"ATM/USDT",
+"XEC/USDT",
+"STORJ/USDT",
+"ZRX/USDT",
+"SRM/USDT",
+"ICX/USDT",
+"API3/USDT",
+"ONT/USDT",
+"SKL/USDT",
+"MULTI/USDT",
+"QTUM/USDT",
+"COCOS/USDT",
+"VOXEL/USDT",
+"HIVE/USDT",
+"KP3R/USDT",
+"ATA/USDT",
+"STMX/USDT",
+"ADX/USDT",
+"HIGH/USDT",
+"NULS/USDT",
+"MLN/USDT",
+"YGG/USDT",
+"SC/USDT",
+"CKB/USDT",
+"TOMO/USDT",
+"STX/USDT",
+"FLUX/USDT",
+"DNT/USDT",
+"ORN/USDT",
+"PLA/USDT",
+"BADGER/USDT",
+"DF/USDT",
+"MOB/USDT",
+"LPT/USDT",
+"SCRT/USDT",
+"RAD/USDT",
+"NMR/USDT",
+"ELF/USDT",
+"TORN/USDT",
+"T/USDT",
+"QUICK/USDT",
+"LSK/USDT",
+"FIDA/USDT",
+"XNO/USDT",
+"BTG/USDT",
+"GHST/USDT",
+"EPS/USDT"
+],
     "Binance_BUSD_HALAL"["LUNA/BUSD",
     "ETH/BUSD",
     "IDEX/BUSD",
