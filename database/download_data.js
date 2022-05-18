@@ -137,10 +137,10 @@ let exchange = new ccxt.binance({ enableRateLimit: true })
 
 // --- Edit coin list here ---
 //pair_list = ["BTC/USDT", "ETH/USDT", 'ADA/USDT', 'XRP/USDT', 'BNB/USDT', 'LINK/USDT', 'LTC/USDT', "DOGE/USDT", "SOL/USDT", "AVAX/USDT", "DOT/USDT", "LUNA/USDT", "MATIC/USDT", "NEAR/USDT", "EGLD/USDT", "XTZ/USDT", "AAVE/USDT", "UNI/USDT", "FTM/USDT", "BCH/USDT"]
-pair_list = coin_list['Binance_BUSD_HALAL']
+pair_list = coin_list['Binance_USDT_HALAL']
 
 // --- Edit timeframe list and start date here ---
-timeframe_list = ['15m','1h','4h','1d']
+timeframe_list = ['1m','5m','15m','1h','4h','1d']
 start_date = "01-06-2017"
 
 
