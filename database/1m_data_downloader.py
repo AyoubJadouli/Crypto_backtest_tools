@@ -4,7 +4,7 @@ const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 const exchange_limit = JSON.parse(fs.readFileSync('./database/exchange_limit.json', 'utf8'));
 const tf_ms = JSON.parse(fs.readFileSync('./database/tf_ms.json', 'utf8'));
 const coin_list = JSON.parse(fs.readFileSync('./database/coin_list.json', 'utf8'));
-const minimazed_data_load_exchange_limit = 500
+const minimazed_data_load_exchange_limit = 50
 function date_to_timestamp(my_date) {
     my_date = my_date.split("-");
     let newDate = new Date(Date.UTC(my_date[2], my_date[1] - 1, my_date[0]));
