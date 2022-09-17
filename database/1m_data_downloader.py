@@ -4,7 +4,7 @@ const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 const exchange_limit = JSON.parse(fs.readFileSync('./database/exchange_limit.json', 'utf8'));
 const tf_ms = JSON.parse(fs.readFileSync('./database/tf_ms.json', 'utf8'));
 const coin_list = JSON.parse(fs.readFileSync('./database/coin_list.json', 'utf8'));
-
+const minimazed_data_load_exchange_limit = 1000
 function date_to_timestamp(my_date) {
     my_date = my_date.split("-");
     let newDate = new Date(Date.UTC(my_date[2], my_date[1] - 1, my_date[0]));
@@ -124,7 +124,7 @@ async function get_multi_ohlcv(exchange, pair_list, tf_list, start_date, exchang
                 pair_list[pair],
                 tf_list[tf],
                 start_date,
-                exchange_limit_json[exchange.name],
+                minimazed_data_load_exchange_limit,
                 tf_ms_json[tf_list[tf]]
             );
         }
@@ -137,131 +137,11 @@ let exchange = new ccxt.binance({ enableRateLimit: true })
 
 // --- Edit coin list here ---
 //pair_list = ["BTC/USDT", "ETH/USDT", 'ADA/USDT', 'XRP/USDT', 'BNB/USDT', 'LINK/USDT', 'LTC/USDT', "DOGE/USDT", "SOL/USDT", "AVAX/USDT", "DOT/USDT", "LUNA/USDT", "MATIC/USDT", "NEAR/USDT", "EGLD/USDT", "XTZ/USDT", "AAVE/USDT", "UNI/USDT", "FTM/USDT", "BCH/USDT"]
-<<<<<<< HEAD
-pair_list = ["LTC/USDT",
-    "AR/USDT",
-    "NULS/USDT",
-    "SC/USDT",
-    "DASH/USDT",
-    "EUR/USDT",
-    "DOT/USDT",
-    "JST/USDT",
-    "ETC/USDT",
-    "FIDA/USDT",
-    "GALA/USDT",
-    "ICP/USDT",
-    "IDEX/USDT",
-    "IQ/USDT",
-    "KP3R/USDT",
-    "LPT/USDT",
-    "MANA/USDT",
-    "MBOX/USDT",
-    "LUNA/USDT",
-    "UST/USDT",
-    "QTUM/USDT",
-    "RAD/USDT",
-    "RVN/USDT",
-    "SHIB/USDT",
-    "SOL/USDT",
-    "SYS/USDT",
-    "T/USDT",
-    "TORN/USDT",
-    "MTD/USDT",
-    "YGG/USDT",
-    "ADA/USDT",
-    "ALICE/USDT",
-    "ALGO/USDT",
-    "API3/USDT",
-    "MLN/USDT",
-    "PSG/USDT",
-    "ORN/USDT",
-    "ROSE/USDT",
-    "GMT/USDT",
-    "DF/USDT",
-    "ATA/USDT",
-    "ICX/USDT",
-    "JASMY/USDT",
-    "OMG/USDT",
-    "LSK/USDT",
-    "HIVE/USDT",
-    "BTG/USDT",
-    "CITY/USDT",
-    "REN/USDT",
-    "XEC/USDT",
-    "IOTA/USDT",
-    "EGLD/USDT",
-    "GHST/USDT",
-    "STX/USDT",
-    "STORJ/USDT",
-    "EOS/USDT",
-    "XLM/USDT",
-    "TRX/USDT",
-    "ONT/USDT",
-    "XMR/USDT",
-    "CKB/USDT",
-    "LAZIO/USDT",
-    "COCOS/USDT",
-    "BAR/USDT",
-    "LOKA/USDT",
-    "ATM/USDT",
-    "JUV/USDT",
-    "ACM/USDT",
-    "DAR/USDT",
-    "VOXEL/USDT",
-    "AVAX/USDT",
-    "HIGH/USDT",
-    "XRP/USDT",
-    "GLMR/USDT",
-    "OGN/USDT",
-    "KDA/USDT",
-    "APE/USDT",
-    "BADGER/USDT",
-    "PLA/USDT",
-    "XNO/USDT",
-    "DOGE/USDT",
-    "WAVES/USDT",
-    "ZIL/USDT",
-    "STMX/USDT",
-    "MBL/USDT",
-    "AXS/USDT",
-    "ASTR/USDT",
-    "ADX/USDT",
-    "EPS/USDT",
-    "SNX/USDT",
-    "MTL/USDT",
-    "ZRX/USDT",
-    "ELF/USDT",
-    "NEAR/USDT",
-    "ENS/USDT",
-    "SCRT/USDT",
-    "NMR/USDT",
-    "SKL/USDT",
-    "GRT/USDT",
-    "MOB/USDT",
-    "DNT/USDT",
-    "QUICK/USDT",
-    "SLP/USDT",
-    "PORTO/USDT",
-    "TOMO/USDT",
-    "ZEC/USDT",
-    "MULTI/USDT",
-    "FLUX/USDT",
-    "PYR/USDT",
-    "GAL/USDT",
-    "SRM/USDT"
-]
-
-// pair_list = coin_list['ftx_main_list']
-
-// --- Edit timeframe list and start date here ---
-timeframe_list = ['15m', '1h', '1d']
-=======
 pair_list = coin_list['Binance_USDT_HALAL']
 
 // --- Edit timeframe list and start date here ---
-timeframe_list = ['5m','15m','1h','4h','1d']
->>>>>>> 7d6ed86ce0045b1780cef53cb35b01321582ad61
-start_date = "01-06-2017"
+timeframe_list = ['1m']
+start_date = "01-07-2020"
 
 
 get_multi_ohlcv(
