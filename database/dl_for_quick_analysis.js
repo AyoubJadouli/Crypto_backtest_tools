@@ -115,4 +115,4 @@ async function get_all_coin(exchange, timeframe, limit) {
 
 delete_directory()
 let exchange = new ccxt.binance({ enableRateLimit: true })
-get_all_coin(exchange, "1h", 1000)
+get_all_coin(exchange, "1m", 1000)
