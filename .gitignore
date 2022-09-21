@@ -1,6 +1,7 @@
 # Node
 node_modules/
-
+#BigData
+*.csv
 # Database
 database/
 download_data.js
