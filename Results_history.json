@@ -1,0 +1,4 @@
+{
+    "1e-06": "code",
+    "0.9589128494262695": "model.add(Dense(int(IN_DIM/4),input_dim=IN_DIM,activation='softmax'))\nmodel.add(Dense(int(IN_DIM/1),activation='relu'))\nmodel.add(Dropout(0.7))\nmodel.add(Dense(1,activation='sigmoid'))"
+}
