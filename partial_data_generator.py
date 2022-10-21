@@ -100,16 +100,25 @@ def argpars(argv):
 
 #if __name__ == "__main__":
 argpars(sys.argv)
-
-if not arg_window:WINDOW_SIZE=int(arg_window)
-if not arg_start:STARTPOINT=int(arg_start)
-if not arg_end:ENDPOINT=int(arg_end)
-if not arg_output:DATA_FILE=int(arg_output)
-if not arg_part:DATAPART=arg_part
-if not arg_sample:SAMPLE_SIZE=int(arg_sample)
-if not arg_weight:PER_WEIGHT=float(arg_weight)
-if not arg_bp:BUY_PERCENT=float(arg_bp)
-if not arg_f:MAX_FORCAST_SIZE=int(arg_f)
+#if __name__ == "__main__":
+if  arg_window:
+    WINDOW_SIZE=int(arg_window)
+if  arg_start:
+    STARTPOINT=int(arg_start)
+if  arg_end:
+    ENDPOINT=int(arg_end)
+if  arg_output:
+    DATA_FILE=arg_output
+if  arg_part:
+    DATAPART=arg_part
+if  arg_sample:
+    SAMPLE_SIZE=int(arg_sample)
+if  arg_weight:
+    PER_WEIGHT=float(arg_weight)
+if  arg_bp:
+    BUY_PERCENT=float(arg_bp)
+if  arg_f:
+    MAX_FORCAST_SIZE=int(arg_f)
 
 DATA_FILE=DATA_FILE+DATAPART
 
@@ -117,6 +126,7 @@ META_INFO=f'Window: {WINDOW_SIZE} - Focast time: {MAX_FORCAST_SIZE}min - Buy tre
 
 print(f"working on generataing Data: {META_INFO}")
 print(f"file will be saved in {DATA_FILE}")
+
 import sys
 sys.path.append('/UltimeTradingBot/Crypto_backtest_tools')
 from utilities.get_data import get_historical_from_db
@@ -1150,9 +1160,31 @@ def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
 #pair_list=Binance_USDT_HALAL[:20]
 
 #str(sys.argv)
+def genddd(pair,window,PER_WEIGHT,SAMPLE_SIZE,MetaData):
+    df=mini_expand3(pair=pair,i=0,j=len(df_list1m[pair]),window=window,metadata=MetaData)
+    gc.collect()
+    df=df.reset_index()
+    try:df.pop("num_index")
+    except: pass
+    try:df.pop("index")
+    except: pass
+    try:df.pop("date")
+    except: pass
+    #df=data_shufler(df)            
+    df=data_chooser(df,weight=PER_WEIGHT,row_numbers=SAMPLE_SIZE)
+    try:df.pop("num_index")
+    except: pass
+    try:df.pop("index")
+    except: pass
+    try:df.pop("date")
+    except: pass
+    gc.collect()
+    #df=data_cleanup(df)
+    df=df.dropna()
+    return df
 
 
-pair_list=Binance_USDT_HALAL[1:10]
+pair_list=Binance_USDT_HALAL[STARTPOINT:ENDPOINT]
 window=WINDOW_SIZE
 buy_weight=50
 sample_size=100000
@@ -1164,26 +1196,13 @@ for pair in pair_list:
     if pair != "BTC/USDT":
         print("working on: "+pair ,end=" -->")
         try:
-            df=mini_expand3(pair=pair,i=0,j=len(df_list1m[pair]),window=window,metadata=MetaData)
-            gc.collect()
             count+=1
-            df=df.reset_index()
-            try:df.pop("num_index")
-            except: pass
-            try:df.pop("index")
-            except: pass
-            try:df.pop("date")
-            except: pass
-            df=data_shufler(df)            
-            df=data_chooser(df,weight=buy_weight,row_numbers=sample_size)
-            gc.collect()
-            df=data_cleanup(df)
+            df= genddd(pair,window,PER_WEIGHT,SAMPLE_SIZE,MetaData)
             print(pair+f" is processed -- {count}/{len(pair_list)}")
+            xdf=pd.concat([xdf,df],axis=0)
         except Exception as e:
             print(f"error while processing {pair} {count}/{len(pair_list)}")
             print(e)
-        xdf=pd.concat([xdf,df],axis=0)
-        del(df)
         gc.collect()
 df=xdf
 del xdf
@@ -1205,6 +1224,8 @@ try:df.pop("index")
 except: pass
     
 gc.collect()
+#df=df.dropna()
+df=data_shufler(df)
 
 print("saveing the file")
 df.to_csv(DATA_FILE,index=False)

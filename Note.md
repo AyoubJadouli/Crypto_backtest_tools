@@ -493,3 +493,103 @@ maxi relu acc:  ------val_accuracy-----> 76.74 | 98.92 <----------accuracy------
 maxi relu acc: ------val_accuracy-----> 79.34 | 79.94 <----------accuracy----------
         b==1 >>>  104s 2ms/step - loss: 0.8061 - accuracy: 0.5284
         b==0 >>> 90%
+
+
+## w4 1min
+41635/41635 [==============================] - 63s 2ms/step - loss: 0.4022 - accuracy: 0.8566
+18526/18526 [==============================] - 28s 2ms/step - loss: 1.0683 - accuracy: 0.5174
+60161/60161 [==============================] - 93s 2ms/step - loss: 0.6073 - accuracy: 0.7522
+class 0: [0.40222346782684326, 0.8566209673881531]
+class 1: [1.0682971477508545, 0.5173829793930054]
+FULL class : [0.6073324084281921, 0.7521564960479736]
+
+
+## best models for w20
+### 1
+model.add(Dense(int(IN_DIM/1),input_dim=IN_DIM,activation='tanh'))
+model.add(Dense(int(IN_DIM/3),activation='relu'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/4),activation='tanh'))
+model.add(Dense(int(IN_DIM/2),activation='relu'))
+model.add(Dropout(0.6))
+model.add(Dense(int(IN_DIM/6),activation='relu'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/6),activation='tanh'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/6),activation='relu'))
+model.add(Dense(1,activation='sigmoid'))
+
+
+
+### 2 max is: 0.6523500084877014
+model.add(Dense(int(IN_DIM/1),input_dim=IN_DIM,activation='tanh'))
+model.add(Dense(int(IN_DIM/3),activation='relu'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/4),activation='tanh')) 
+model.add(Dense(int(IN_DIM/2),activation='relu'))
+model.add(Dropout(0.6))
+model.add(Dense(int(IN_DIM/6),activation='relu'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/6),activation='tanh'))
+model.add(Dropout(0.7))
+model.add(Dense(int(IN_DIM/6),activation='relu'))
+model.add(Dense(1,activation='sigmoid'))
+
+### 3 max is: 0.6463000178337097
+model.add(Dense(int(IN_DIM/3),input_dim=IN_DIM,activation='relu'))
+model.add(Dense(int(IN_DIM/3),activation='relu'))
+model.add(Dense(int(IN_DIM/3),activation='relu'))
+model.add(Dense(int(IN_DIM/2),activation='sigmoid'))
+model.add(Dense(int(IN_DIM/8),activation='softplus'))
+model.add(Dense(int(IN_DIM/5),activation='softplus'))
+model.add(Dense(int(IN_DIM/3),activation='relu'))
+model.add(Dense(1,activation='sigmoid'))
+
+## best models for w40
+### max is: 0.6422399878501892
+model.add(Dense(int(IN_DIM/3),input_dim=IN_DIM,activation='sigmoid'))
+model.add(Dense(int(IN_DIM/2),activation='relu'))
+model.add(Dense(1,activation='sigmoid'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################################################### Good Model ##############################################
+## code:
+
+
+## max training ##
+   IN_DIM=len(mean)
+    model = Sequential()
+    model.add(Dense(int(IN_DIM/1),input_dim=IN_DIM,activation='relu'))
+    model.add(Dense(int(IN_DIM/1),activation='softplus'))
+    model.add(Dense(int(IN_DIM/3),activation='relu'))
+    model.add(Dense(int(IN_DIM/3),activation='relu'))
+    model.add(Dense(int(IN_DIM/6),activation='relu'))
+    model.add(Dense(1,activation='sigmoid'))
+    print(model.summary())
+    model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+    callbacks_a = ModelCheckpoint(filepath =MODEL_FILE,monitor ='val_loss',save_best_only = True, save_weights = True)
+    callbacks_b = EarlyStopping(monitor ='val_loss',mode='auto',patience=30,verbose=1)
+    history = model.fit(XTRAIN,
+                    YTRAIN,
+                    validation_data=(XVALIDATION,YVALIDATION),
+                    epochs=6000,
+                    batch_size=128*5,
+                    callbacks=[callbacks_a,callbacks_b])
+
+## file : 
+        - /UltimeTradingBot/Binance-Fast-Trade-Bot/AI/tp35_w20_max2min_Model_v1.hdf5.71
+        - /UltimeTradingBot/Data/tp35_w20_max2min_Norm_v1.json
+### Results:
+    Training: -----val_accuracy-----> 71.3 | 75.76 <----------accuracy----------
+    Testing:
