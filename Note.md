@@ -593,3 +593,149 @@ model.add(Dense(1,activation='sigmoid'))
 ### Results:
     Training: -----val_accuracy-----> 71.3 | 75.76 <----------accuracy----------
     Testing:
+          39566/39566 [==============================] - 92s 2ms/step - loss: 0.5393 - accuracy: 0.7227
+          35833/35833 [==============================] - 85s 2ms/step - loss: 0.5941 - accuracy: 0.6996
+          75398/75398 [==============================] - 171s 2ms/step - loss: 0.5653 - accuracy: 0.7117
+          class 0: [0.539259672164917, 0.7226698994636536]
+          class 1: [0.5941020846366882, 0.6995856761932373]
+          FULL class : [0.5653234124183655, 0.7116992473602295]
+
+
+
+### W40
+    IN_DIM=len(mean)
+    model2 = Sequential()
+    model2.add(Dense(int(IN_DIM),input_dim=IN_DIM,activation='tanh'))
+    model2.add(Dropout(0.3))
+    model2.add(Dense(int(100),activation='relu'))
+    model2.add(Dropout(0.3))
+    model2.add(Dense(int(50),activation='relu'))
+    model2.add(Dropout(0.3))
+    model2.add(Dense(int(20),activation='relu'))
+    model2.add(Dropout(0.3))
+    model2.add(Dense(int(10),activation='relu'))
+    model2.add(Dense(1,activation='sigmoid'))
+    print(model2.summary())
+    model2.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+    callbacks_a = ModelCheckpoint(filepath =MODEL_FILE+".z4.h5",monitor ='val_loss',save_best_only = True, save_weights = True)
+    callbacks_b = EarlyStopping(monitor ='val_loss',mode='auto',patience=5,verbose=1)
+    history = model2.fit(XXXX,
+                    YYYY,
+                    validation_data=(XX0Val,YY0Val),
+                    epochs=6000,
+                    batch_size=55555,
+                    callbacks=[callbacks_a,callbacks_b])
+------val_accuracy-----> 77.1 | 67 <----------accuracy----------
+
+12097/12097 [==============================] - 26s 2ms/step - loss: 0.5264 - accuracy: 0.7637
+11342/11342 [==============================] - 23s 2ms/step - loss: 0.7118 - accuracy: 0.5549
+23438/23438 [==============================] - 46s 2ms/step - loss: 0.6161 - accuracy: 0.6627
+class 0: 76.37402415275574%
+class 1: 55.4925799369812%
+FULL Model : 66.26946926116943%
+
+
+
+
+
+12097/12097 [==============================] - 25s 2ms/step - loss: 0.3229 - accuracy: 0.9478
+11342/11342 [==============================] - 23s 2ms/step - loss: 0.8236 - accuracy: 0.4344
+23438/23438 [==============================] - 48s 2ms/step - loss: 0.5652 - accuracy: 0.6994
+class 0: 94.7782576084137%
+class 1: 43.44053566455841%
+FULL Model : 69.93586421012878%
+
+
+
+
+################################### Colab Tests ########################################
+# buy onlu predicted (one time)
+
+## using w20 data
+We used the test data in devoteam drive in witch we have the window of 20 unity with the buy Y at 0.35% and the forcast session at 2min
+W=20
+tp=0.35%
+F=2min
+
+### testing DevopTeamDrive/TMP/tp35_w20_max2min_Model_v1.hdf5.ZZ.h5 : retraned with 400000 sample
+False_prediction[False_prediction==0].shape[0]/5000 => 11.7346 % #### it mean that 11.73 of the 0 class are wrong the buyed witch lead the losses
+False_prediction[False_prediction==1].shape[0]/5000 => 23.1568% #### it we don't buy 23 % of the correct chanses
+
+True_prediction[True_prediction==0].shape[0]/5000 => 40.6126 % #### it mean that 40 % of class 0 are predicted correctly
+True_prediction[True_prediction==1].shape[0]/5000 => 24.496 #### the only buying correct of all
+
+
+### testing DevopTeamDrive/WorkDir/tp35_w20_max2min_Model_vZ2.hdf5 : original production trained with all availible data
+False_prediction[False_prediction==0]=> 0.286
+False_prediction[False_prediction==1]=>40.2578
+
+True_prediction[True_prediction==0]=>52.0612
+True_prediction[True_prediction==1]=>7.395
+
+
+loss training
+##########################################################################
+------val_accuracy-----> 65.67 | 89.87 <----------accuracy----------
+acc:
+##########################################################################
+------val_accuracy-----> 65.74 | 86.04 <----------accuracy----
+
+
+############ new ZZZ
+False prediction class 0 :5.423 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :6.5766 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.9242 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :41.0762 %#### the only buying correct of all
+
+#### data part 1
+False prediction class 0 :5.423 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :6.5766 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.9242 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :41.0762 %#### the only buying correct of all
+
+#### data part 2
+False prediction class 0 :16.2364 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :20.4676 %#### we don't buy x % of the correct chanses
+True prediction class 0 :36.1754 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :27.1206 %#### the only buying correct of all
+
+#### data part3 with retrain
+False prediction class 0 :5.0318 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :0.0 %#### we don't buy x % of the correct chanses
+True prediction class 0 :79.6918 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :15.2764 %#### the only buying correct of all
+
+### p4
+False prediction class 0 :5.3218 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :32.7908 %#### we don't buy x % of the correct chanses
+True prediction class 0 :47.027 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :14.8604 %#### the only buying correct of all
+
+
+##############
+
+
+False prediction class 0 :5.5908 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :33.0596 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.9404 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :14.4092 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 27.953999999999997  %
+
+
+False prediction class 0 :5.5726 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :33.0352 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.922 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :14.4702 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull SBPU: 27.80350050891093  %
+
+False prediction class 0 :5.603 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :33.1202 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.8104 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :14.4664 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 27.918124109340585  %
+
+  
+-0.1: 25.315886505688205  
+-0.2: 21.85114503816794  %
+
+## real pecent of class 1 of class0 : 100*620/(3812+620) = 14 % witch mean that to have wining results we need to have SBPU lesser than 14%
