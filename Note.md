@@ -706,3 +706,96 @@ True prediction class 0 :79.6918 %#### it mean that 40 % of class 0 are predicte
 True prediction class 1 :15.2764 %#### the only buying correct of all
 
 ##############
+prediction compar for w7 30min 0.6 on 0.33
+
+
+
+## pyhome test x1 trained
+False prediction class 0 :7.551926240095635 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :6.401531652061684 %#### we don't buy x % of the correct chanses
+True prediction class 0 :47.056567447978914 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :38.98997465986377 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 83.77391964215579  %
+
+
+## 
+
+False prediction class 0 :8.332928070504005 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :11.133966785003413 %#### we don't buy x % of the correct chanses
+True prediction class 0 :46.27556561757054 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :34.25753952692204 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 80.43475796211355  %
+
+
+
+
+###### Dont buy model 
+param W=10 - SL:0.2% 
+train results: 69% - 75%
+PRED: mean=48%
+REAL_PRED : mean=35%
+## retrained
+Prediction mean :32.829877734184265 %#### the colose to 50 the better
+False prediction class 0 :8.949769649004127 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :11.078145345274537 %#### we don't buy x % of the correct chanses
+True prediction class 0 :56.091976863642 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :23.880108142079333 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 72.73894924021049  %
+
+
+## simple trained
+
+Prediction mean :42.675334215164185 %#### the colose to 50 the better
+False prediction class 0 :12.201638294504141 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :18.981863335375934 %#### we don't buy x % of the correct chanses
+True prediction class 0 :38.34280392616408 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :30.473694443955846 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 71.40821755442872  %
+
+## retrained with simple model
+
+Prediction mean :35.690927505493164 %#### the colose to 50 the better
+False prediction class 0 :28.045346653171883 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :4.202794446855736 %#### we don't buy x % of the correct chanses
+True prediction class 0 :41.48095890287227 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :26.270899997100113 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 86.20845117881886  %
+
+### retrained 2 with success prediction of
+Prediction mean :31.93490505218506 %#### the colose to 50 the better
+False prediction class 0 :30.651443360181865 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :2.352998223461621 %#### we don't buy x % of the correct chanses
+True prediction class 0 :42.89938479574087 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :24.09617362061564 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 91.10369792546632  %
+
+### retrained 3 with success prediction of
+
+Prediction mean :29.763031005859375 %#### the colose to 50 the better
+False prediction class 0 :32.105333465809125 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :1.4419102375103932 %#### we don't buy x % of the correct chanses
+True prediction class 0 :43.70165564629725 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :22.751100650383236 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 94.03997193986328  
+
+## retrained 4
+Prediction mean :28.05865705013275 %#### the colose to 50 the better
+False prediction class 0 :32.86054054876353 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :1.1647569394099155 %#### we don't buy x % of the correct chanses
+True prediction class 0 :44.303786636647274 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :21.670915875179283 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 94.89939732073155  %
+## retrained 4
+Prediction mean :26.830056309700012 %#### the colose to 50 the better
+False prediction class 0 :33.49385722754476 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :0.8735320501880411 %#### we don't buy x % of the correct chanses
+True prediction class 0 :44.761683818002986 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :20.870926904264216 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 95.98273724806025  %
+## retrained 5
+Prediction mean :26.830056309700012 %#### the colose to 50 the better
+False prediction class 0 :33.707561772412824 %#### it mean that x of the 0 class are wrong the buyed witch lead the losses
+False prediction class 1 :0.9102802529845099 %#### we don't buy x % of the correct chanses
+True prediction class 0 :44.71402329800221 %#### it mean that 40 % of class 0 are predicted correctly
+True prediction class 1 :20.668134676600452 %#### the only buying correct of all
+successful buy pourcent of unsuccessfull: 95.7815240092706  %
