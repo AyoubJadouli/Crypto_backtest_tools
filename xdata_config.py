@@ -1,8 +1,9 @@
 #sys.path.append('/UltimeTradingBot/Crypto_backtest_tools')
-WINDOW_SIZE=15
-BUY_PERCENT=0.77
+WINDOW_SIZE=20
+BUY_MODE="BUY_UP" #"BUY_ONLY" #"BUY_DIP"
+BUY_PERCENT=0.6
 SELL_PERCENT=0.3
-MAX_FORCAST_SIZE=5
+MAX_FORCAST_SIZE=6
 VERSION=1
 TESTING_MOD=False
 UPGRAD_MOD=False
@@ -10,9 +11,9 @@ JUST_IMPORT_DATA=False
 #Normalization_File='w15_NoVol_Normalization.json'
 #Model_FileName='w15_NoVol_XcryptoAi_model.hdf5'
 ALLHIST_FILE='Results_history.json'
-DATA_DIR='/UltimeTradingBot/Data/'
+#DATA_DIR='/UltimeTradingBot/Data/'
 FIRST_NORM_FLAG=True
-DATA_DIR='/UltimeTradingBot/Data'
+DATA_DIR='/UltimeTradingBot/Data/Multi/Min'
 Normalization_File=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Norm_v{VERSION}.json'
 Model_FileName=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Model_v{VERSION}.hdf5'
 DATA_FILE=f'{DATA_DIR}/CSV/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv'
