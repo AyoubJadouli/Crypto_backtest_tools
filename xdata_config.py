@@ -1,9 +1,9 @@
 #sys.path.append('/UltimeTradingBot/Crypto_backtest_tools')
-WINDOW_SIZE=20
-BUY_MODE="BUY_UP" #"BUY_ONLY" #"BUY_DIP"
-BUY_PERCENT=0.6
+WINDOW_SIZE=24
+BUY_MODE="AFTER_DEPTH" #"BUY_UP" #"BUY_ONLY" #"BUY_DIP" #AFTER_DEPTH
+BUY_PERCENT=1.1
 SELL_PERCENT=0.3
-MAX_FORCAST_SIZE=6
+MAX_FORCAST_SIZE=20
 VERSION=1
 TESTING_MOD=False
 UPGRAD_MOD=False
@@ -13,7 +13,8 @@ JUST_IMPORT_DATA=False
 ALLHIST_FILE='Results_history.json'
 #DATA_DIR='/UltimeTradingBot/Data/'
 FIRST_NORM_FLAG=True
-DATA_DIR='/UltimeTradingBot/Data/Multi/Min'
+ORG_DATA_DIR='/UltimeTradingBot/Data'
+DATA_DIR=ORG_DATA_DIR+'/'+BUY_MODE
 Normalization_File=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Norm_v{VERSION}.json'
 Model_FileName=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Model_v{VERSION}.hdf5'
 DATA_FILE=f'{DATA_DIR}/CSV/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv'

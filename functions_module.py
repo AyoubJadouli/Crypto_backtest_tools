@@ -47,6 +47,7 @@ def pdebug(err):
         
         
 Binance_USDT_HALAL = [
+    "SNM/BUSD",
     "BTC/USDT",
     "LUNA/USDT",
     "ETH/USDT",
@@ -299,16 +300,31 @@ def print_pl():
     
     
     
-    
+def check_metadata(pair_list):
+    global MetaData
+    MetaData = pd.read_csv("../Data/MetaData.csv",index_col=0)
+    pair_list_plus=[]
+    for pair in pair_list:
+        if pair not in MetaData["Pair"].to_list():
+            pair_list_plus.append(pair)
+    if pair_list_plus:
+        MetaDataPlus=get_crypto_metadata(pair_list_plus)
+        MetaData.concat([MetaData,MetaDataPlus])
+        MetaData.to_csv("../Data/MetaData.csv")    
     
     
     
 try:
+    global MetaData
     MetaData = pd.read_csv("../Data/MetaData.csv",index_col=0)
+    check_metadata(Binance_USDT_HALAL)
 except:
     MetaData=get_crypto_metadata(Binance_USDT_HALAL)
     MetaData.to_csv("../Data/MetaData.csv")
 #allok = pd.read_csv('D:/+DATA+/allok_w15.csv')
+
+
+
 
 
 
@@ -1340,6 +1356,47 @@ def buy_min_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:df.pop("ismin")
     except:print("---buy_only--- no sell")
 
+    return df
+
+def buy_after_depth(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    try:
+        
+        print (f"---buy_min_up--- Buy percent: {buy_pourcent}%")
+        mino=buy_pourcent*0.01
+        maxo=-sell_pourcent*0.01
+        codep1='df["buy"]=((('
+        for i in range(1,window):
+            codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
+        codep2='df["high"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df['ismin'] = np.where(
+        df['high'].shift(1) <= df.shift(-window-1).rolling(2*window)['high'].min(), 1,
+       0
+        )
+        df["buy"]=((df['buy']==1 ) & (df['ismin']==1)).replace({False: 0, True: 1})
+        
+        codep1='df["sell"]=((( '
+        for i in range(1,window):
+            codep1=codep1+'df["low"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo ) | (('
+        codep2='df["low"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo )).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df["buy"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
+
+    except Exception as e:
+        print("Error buy only")
+        print(e)
+    try:df.pop("b")
+    except:print("---buy_only--- no b")
+    try:df.pop("ismin")
+    except:print("---buy_only--- no sell")
+    try:df.pop("sell")
+    except:print("---buy_only--- no sell")
     return df
 
 def buy_the_dip(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
