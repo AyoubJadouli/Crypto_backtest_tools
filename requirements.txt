@@ -12,3 +12,4 @@ python-dotenv
 nltk
 scikit-learn
 TA-Lib
+mplfinance

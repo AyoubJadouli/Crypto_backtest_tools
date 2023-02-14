@@ -47,6 +47,7 @@ def pdebug(err):
         
         
 Binance_USDT_HALAL = [
+    "SNM/BUSD",
     "BTC/USDT",
     "LUNA/USDT",
     "ETH/USDT",
@@ -190,7 +191,8 @@ for pair in pair_list:
     df = get_historical_from_db(
         ccxt.binance(), pair, '15m', path="./database/")
     df_list15m[pair] = df.loc[:]
-del(df)
+try: del(df)
+except:pass
 df_list = df_list1m
 prerr("Data load 100% use df_list1d[\"BTC/USDT\"] for exemple to access")
 
@@ -299,16 +301,31 @@ def print_pl():
     
     
     
-    
+def check_metadata(pair_list):
+    global MetaData
+    MetaData = pd.read_csv("../Data/MetaData.csv",index_col=0)
+    pair_list_plus=[]
+    for pair in pair_list:
+        if pair not in MetaData["Pair"].to_list():
+            pair_list_plus.append(pair)
+    if pair_list_plus:
+        MetaDataPlus=get_crypto_metadata(pair_list_plus)
+        MetaData.concat([MetaData,MetaDataPlus])
+        MetaData.to_csv("../Data/MetaData.csv")    
     
     
     
 try:
+    global MetaData
     MetaData = pd.read_csv("../Data/MetaData.csv",index_col=0)
+    check_metadata(Binance_USDT_HALAL)
 except:
     MetaData=get_crypto_metadata(Binance_USDT_HALAL)
     MetaData.to_csv("../Data/MetaData.csv")
 #allok = pd.read_csv('D:/+DATA+/allok_w15.csv')
+
+
+
 
 
 
@@ -1311,6 +1328,71 @@ def buy_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
 
     return df
 
+def buy_after_depth_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    try:
+        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}%")
+        mino=buy_pourcent*0.01
+        maxo=-sell_pourcent*0.01
+        codep1='df["buy"]=((('
+        for i in range(1,window):
+            codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
+        codep2='df["close"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df['ismin'] = np.where(
+        df['close'].shift(1) <= df.shift(-window-1).rolling(2*window)['close'].min(), 1,
+       0
+        )
+        df["buy"]=((df['buy']==1 ) & (df['ismin']==1)).replace({False: 0, True: 1})
+        
+        codep1='df["sell"]=((( '
+        for i in range(1,window):
+            codep1=codep1+'df["low"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo ) | (('
+        codep2='df["low"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo )).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df["buy"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
+
+    except Exception as e:
+        print("Error buy only")
+        print(e)
+    try:df.pop("b")
+    except:print("---buy_after_depth--- no b")
+    try:df.pop("ismin")
+    except:print("---buy_after_depth--- no sell")
+    try:df.pop("sell")
+    except:print("---buy_after_depth--- no sell")
+    return df
+
+def buy_up_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    try:
+        
+        print (f"---buy_simple_up--- Buy percent: {buy_pourcent}%")
+        print (f"---buy_only--- Max time window: {window}%")
+        mino=buy_pourcent*0.01
+        maxo=-sell_pourcent*0.01
+        codep1='df["buy"]=((('
+        for i in range(1,window):
+            codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
+        codep2='df["close"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+    except Exception as e:
+        print("Error buy only")
+        print(e)
+    try:df.pop("b")
+    except:print("---buy_only--- no b")
+    try:df.pop("sell")
+    except:print("---buy_only--- no sell")
+
+    return df
+
 # Costumaize buy condition here
 def buy_min_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:
@@ -1340,6 +1422,88 @@ def buy_min_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:df.pop("ismin")
     except:print("---buy_only--- no sell")
 
+    return df
+
+def buy_after_depth(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    try:
+        
+        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}%")
+        mino=buy_pourcent*0.01
+        maxo=-sell_pourcent*0.01
+        codep1='df["buy"]=((('
+        for i in range(1,window):
+            codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
+        codep2='df["high"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df['ismin'] = np.where(
+        df['high'].shift(1) <= df.shift(-window-1).rolling(2*window)['high'].min(), 1,
+       0
+        )
+        df["buy"]=((df['buy']==1 ) & (df['ismin']==1)).replace({False: 0, True: 1})
+        
+        codep1='df["sell"]=((( '
+        for i in range(1,window):
+            codep1=codep1+'df["low"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo ) | (('
+        codep2='df["low"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo )).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df["buy"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
+
+    except Exception as e:
+        print("Error buy only")
+        print(e)
+    try:df.pop("b")
+    except:print("---buy_after_depth--- no b")
+    try:df.pop("ismin")
+    except:print("---buy_after_depth--- no sell")
+    try:df.pop("sell")
+    except:print("---buy_after_depth--- no sell")
+    return df
+
+def buy_after_depth2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    try:
+        
+        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}%")
+        mino=buy_pourcent*0.01
+        maxo=-sell_pourcent*0.01
+        codep1='df["buy"]=((('
+        for i in range(1,window):
+            codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )& (('
+        codep2='df["high"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df['ismin'] = np.where(
+        df['high'].shift(1) <= df.shift(-window-1).rolling(2*window)['high'].min(), 1,
+       0
+        )
+        df["buy"]=((df['buy']==1 ) & (df['ismin']==1)).replace({False: 0, True: 1})
+        
+        codep1='df["sell"]=((( '
+        for i in range(1,window):
+            codep1=codep1+'df["low"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo ) | (('
+        codep2='df["low"].shift(periods='+str(-window)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] <=maxo )).replace({False: 0, True: 1})'
+        code=codep1+codep2
+        prerr(code)
+        exec(code)
+
+        df["buy"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
+
+    except Exception as e:
+        print("Error buy only")
+        print(e)
+    try:df.pop("b")
+    except:print("---buy_after_depth--- no b")
+    try:df.pop("ismin")
+    except:print("---buy_after_depth--- no sell")
+    try:df.pop("sell")
+    except:print("---buy_after_depth--- no sell")
     return df
 
 def buy_the_dip(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
@@ -1372,7 +1536,8 @@ def buy_the_dip(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3)
 
     return df
 
-def mini_expand3(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT):
+def mini_expand4(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,buy_function=buy_min_up):
+    print(f"mini_expand : {pair}")
     Pair_Full=full_expand(df_list1m[pair].iloc[i:j],df_list5m[pair],df_list15m[pair],df_list1h[pair],df_list1d[pair],window)
     BTC_Full=full_expand(
         df_list1m["BTC/USDT"].loc[(Pair_Full.iloc[0].name-pd.Timedelta(str(window) +" d")).round(freq='1 min'):Pair_Full.iloc[len(Pair_Full)-1].name],
@@ -1443,3 +1608,10 @@ def data_chooser50(df,row_numbers=100000):
                  dfnob])
     df=data_shufler(df)
     return df
+
+
+def human_percent(float_percent,type_string="Precent Mean",ShowMessage=True):
+    nb=round(float_percent*100,3)
+    if ShowMessage: print(type_string+": "+"{:.3f}".format(nb)+"%")
+    return nb
+hp=human_percent

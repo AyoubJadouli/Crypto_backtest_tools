@@ -110,7 +110,9 @@
         "GHST/USDT",
         "EPS/USDT"
     ],
-    "Binance_BUSD_HALAL": ["LUNA/BUSD",
+    "Binance_BUSD_HALAL": [
+        "SNM/BUSD",
+        "LUNA/BUSD",
         "ETH/BUSD",
         "IDEX/BUSD",
         "GMT/BUSD",
