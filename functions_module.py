@@ -350,7 +350,12 @@ except:
 
 def buy_fix(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:
-        window=3
+        try:
+            window=MAX_FORCAST_SIZE
+            print(f"fied buy window={MAX_FORCAST_SIZE}")
+        except:
+            window=3
+            print("fied buy window=3")
         #buy_pourcent=0.43
         print (f"---fixed buy--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
         mino=buy_pourcent*0.01
@@ -482,6 +487,14 @@ def buy_test(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     except:print("---buy_after_depth--- no sell")
     return df
 
+def buy_test2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+    max_forecast_size=window#MAX_FORCAST_SIZE
+    after_dip_val=1
+    print(f"ganerating test point with forcast size={max_forecast_size} at {buy_pourcent}% of the current price  ...")
+    mino = buy_pourcent / 100.0    
+    rolling_max_close_diff = ((df['close'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
+    df['buy']=(rolling_max_close_diff >= mino).astype(int)
+    return df
 
 def sell_test(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:
@@ -1693,6 +1706,56 @@ def buy_min_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=
 
     return df
 
+# def buy_test2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+#     max_forecast_size=window#MAX_FORCAST_SIZE
+#     after_dip_val=1
+#     print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {buy_pourcent}% of the current price ")
+#     mino = buy_pourcent / 100.0    
+#     rolling_max_close_diff = ((df['close'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
+#     df['buy']=(rolling_max_close_diff >= mino).astype(int)
+    return df
+
+def buy_optimal(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE):
+    #df = df.fillna(0)
+    mino = buy_pourcent / 100.0
+    maxo = sell_pourcent / 100.0
+    
+    max_forecast_size=window#MAX_FORCAST_SIZE
+    try:
+        after_dip_val=AFTER_MARK
+    except:
+        after_dip_val=1
+    print(f"after mark = : {after_dip_val}")
+    try:
+        print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {buy_pourcent}% of the current price ")
+    except:
+        max_forecast_size = 3
+        print("optimalbuy buy default window=3")
+        
+    rolling_max_close_diff = ((df['close'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
+    df['buy']=(rolling_max_close_diff >= mino).astype(int)
+    
+    # Compute rolling minimum values
+    
+    window_list=[7,window]#[3, 5, 7, 10, 15, 20]
+    
+    for window_size in window_list:
+        col_name = f'ismin{window_size}'
+        rolling_min = (df['close'].shift(after_dip_val) <= df.shift(-window_size-1)['close'].rolling(2*window_size).min())
+        df = df.assign(**{col_name: rolling_min.astype(int)})
+
+    df['ismin'] = df[[f'ismin{window_size}' for window_size in window_list ]].any(axis=1).astype(int)        
+
+    # # Compute buy and sell signals
+    rolling_low_close_diff =  ((df['low'].rolling(window=int(window/2)).min().shift(-int(window/2)+1)/ df['close'] ) -1).fillna(0)
+    df['sell'] = (rolling_low_close_diff <= -maxo).astype(int)
+
+    
+    # Compute final buy signal
+    df['buy'] = ((df['buy'] == 1) & (df['sell'] == 0) & (df['ismin'] == 1)).astype(int)
+    # Remove unnecessary columns
+    df = df.drop(columns=['sell', 'ismin'] + [f'ismin{window_size}' for window_size in window_list], errors='ignore')
+    return df
 
 def buy_after_depth(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     try:
@@ -1899,3 +1962,51 @@ def find_intersection(list1, list2):
     set2 = set(list2)
     intersection = set1.intersection(set2)
     return list(intersection)
+
+
+import requests
+
+url = 'https://api.binance.com/api/v3/ticker/price'
+
+response = requests.get(url)
+tickers = response.json()
+ticker_list=[]
+for ticker in tickers:
+    ticker_list.append((ticker['symbol']))
+
+ALL_BINANCE_TICKERS=ticker_list
+
+
+
+def add_technical_indicators(df):
+    # Calculate indicators
+    df['MA5'] = df['Close'].rolling(5).mean()
+    df['MA10'] = df['Close'].rolling(10).mean()
+    df['MA20'] = df['Close'].rolling(20).mean()
+    df['MA50'] = df['Close'].rolling(50).mean()
+    df['MA100'] = df['Close'].rolling(100).mean()
+    df['MA200'] = df['Close'].rolling(200).mean()
+    
+    df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
+    df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
+    
+    df['MACD'] = df['EMA12'] - df['EMA26']
+    df['Signal Line'] = df['MACD'].ewm(span=9, adjust=False).mean()
+    df['MACD Hist'] = df['MACD'] - df['Signal Line']
+    
+    df['RSI'] = ta.momentum.RSIIndicator(df['Close']).rsi()
+    
+    df['Upper Band'], df['Middle Band'], df['Lower Band'] = ta.volatility.bollinger_bands(
+        df['Close'], window=20, window_dev=2)
+    
+    df['OBV'] = ta.volume.OnBalanceVolumeIndicator(df['Close'], df['Volume']).on_balance_volume()
+    
+    df['ATR'] = ta.volatility.AverageTrueRange(df['High'], df['Low'], df['Close'], window=14).average_true_range()
+    
+    # Drop rows with NaN values
+    df.dropna(inplace=True)
+    
+    # Normalize all values between -1 and 1
+    df = (df - df.mean()) / df.std()
+    
+    return df
