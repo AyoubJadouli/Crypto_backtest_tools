@@ -799,3 +799,34 @@ False prediction class 1 :0.9102802529845099 %#### we don't buy x % of the corre
 True prediction class 0 :44.71402329800221 %#### it mean that 40 % of class 0 are predicted correctly
 True prediction class 1 :20.668134676600452 %#### the only buying correct of all
 successful buy pourcent of unsuccessfull: 95.7815240092706  %
+
+
+
+
+
+################################################
+# train ohlcv dataset with deep MLP 
+Training a deep Multi-Layer Perceptron (MLP) with OHLCV (Open, High, Low, Close, Volume) data as input and a large historical window can be effective in certain cases. However, there are several factors to consider before deciding if this approach is appropriate for a particular problem.
+
+Firstly, the effectiveness of the deep MLP will depend on the specific problem being addressed. If the problem involves predicting stock prices or other financial time series data, then a deep MLP trained on historical OHLCV data can be effective, especially if the model is designed appropriately and trained on a large amount of high-quality data.
+
+Secondly, the size of the historical window used as input is another factor to consider. A larger window may provide more information for the model to learn from, but it can also increase the complexity of the model and potentially lead to overfitting. Thus, the optimal window size will depend on the specific problem and the available data.
+
+Lastly, it is important to consider other factors such as the quality and completeness of the data, as well as potential market noise and volatility. These can all impact the effectiveness of the deep MLP and should be taken into account when designing and training the model.
+
+In summary, training a deep MLP with OHLCV data as input and a large historical window can be effective in certain cases, but it depends on the specific problem and data available. It is important to carefully consider the trade-offs between model complexity, data quality, and other factors before deciding on an approach.
+
+## high-quality data and reducing noise 
+Having high-quality data and reducing noise is crucial for training a deep MLP on financial data like OHLCV. Here are some steps that can be taken to achieve this:
+
+    Use high-quality data sources: The accuracy and completeness of the data sources used to train the model can have a significant impact on its performance. It is important to use reliable and trusted data sources to ensure that the model is learning from accurate information.
+
+    Preprocess the data: Preprocessing the data involves cleaning and transforming it into a format that can be easily fed into the model. This may involve removing outliers, filling in missing values, or normalizing the data.
+
+    Use feature engineering: Feature engineering involves creating new features from the raw data that can provide more meaningful information to the model. For example, you could calculate moving averages or other technical indicators that can help to identify patterns and trends in the data.
+
+    Use regularization techniques: Regularization techniques such as L1 or L2 regularization can be used to reduce overfitting and improve the generalization performance of the model.
+
+    Incorporate domain knowledge: Incorporating domain knowledge can help to identify and remove irrelevant features or data points that can add noise to the model. For example, it may be useful to remove data points that were affected by external factors like holidays or market disruptions.
+
+    Test the model: Finally, it is important to test the model thoroughly using a separate validation dataset to ensure that it is performing well on new, unseen data. This can help to identify and address any remaining issues with noise or data quality.
