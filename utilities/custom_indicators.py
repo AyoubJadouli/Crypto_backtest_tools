@@ -80,10 +80,10 @@ class Trix():
         return pd.Series(self.trixLine, name="TRIX_LINE")
 
     def trix_pct_line(self) -> pd.Series:
-        """ trix percentage line
+        """ trix pctage line
 
             Returns:
-                pd.Series: trix percentage line
+                pd.Series: trix pctage line
         """
         return pd.Series(self.trixPctLine, name="TRIX_PCT_LINE")
 

@@ -19,7 +19,7 @@ from sklearn.utils import shuffle
 import seaborn as sns
 import tensorflow as tf
 
-from utilities.backtesting import plot_wallet_vs_asset, get_metrics, get_n_columns, basic_multi_asset_backtest, plot_sharpe_evolution, plot_bar_by_month
+#from utilities.backtesting import plot_wallet_vs_asset, get_metrics, get_n_columns, basic_multi_asset_backtest, plot_sharpe_evolution, plot_bar_by_month
 #from utilities.custom_indicators import SuperTrend
 pd.options.mode.chained_assignment = None  # default='warn'
 import gc
@@ -337,7 +337,31 @@ def check_metadata(pair_list):
         MetaData.concat([MetaData,MetaDataPlus])
         MetaData.to_csv("../Data/MetaData.csv")    
     
+
+def read_metadata(pairs):
+    if not os.path.exists("../Data"):
+        os.makedirs("../Data")
+    try:
+        MetaData = pd.read_csv("../Data/MetaData.csv",index_col=0)
+        pairs_in_csv = set(MetaData['Pair'].tolist())
+        pairs_to_get_metadata = list(set(pairs) - pairs_in_csv)
+        if pairs_to_get_metadata:
+            new_metadata = get_crypto_metadata(pairs_to_get_metadata)
+            MetaData = pd.concat([MetaData, new_metadata], ignore_index=True)
+            MetaData.to_csv("../Data/MetaData.csv", index=False)
+        return MetaData
+    except:
+        MetaData = get_crypto_metadata(pairs)
+        MetaData.to_csv("../Data/MetaData.csv", index=False)
+        return MetaData
     
+def extract_pairs(list):
+    result = []
+    for element in list:
+        if element.endswith('USDT') or element.endswith('BUSD'):
+            pair = element[:-4] + '/' + element[-4:]
+            result.append(pair)
+    return result
     
 try:
     global MetaData
@@ -348,7 +372,7 @@ except:
     MetaData.to_csv("../Data/MetaData.csv")
 #allok = pd.read_csv('D:/+DATA+/allok_w15.csv')
 
-def buy_fix(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_fix(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         try:
             window=MAX_FORCAST_SIZE
@@ -356,10 +380,10 @@ def buy_fix(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
         except:
             window=3
             print("fied buy window=3")
-        #buy_pourcent=0.43
-        print (f"---fixed buy--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        #BUY_PCT=0.43
+        print (f"---fixed buy--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -417,11 +441,11 @@ def buy_fix(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
 
     return df
 
-def buy_floating(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_floating(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -452,11 +476,11 @@ def buy_floating(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3
     except:print("---buy_after_depth--- no sell")
     return df
 
-def buy_test(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_test(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -487,25 +511,25 @@ def buy_test(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     except:print("---buy_after_depth--- no sell")
     return df
 
-def buy_test2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_test2(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     max_forecast_size=window#MAX_FORCAST_SIZE
     after_dip_val=1
-    print(f"ganerating test point with forcast size={max_forecast_size} at {buy_pourcent}% of the current price  ...")
-    mino = buy_pourcent / 100.0    
+    print(f"ganerating test point with forcast size={max_forecast_size} at {BUY_PCT}% of the current price  ...")
+    mino = BUY_PCT / 100.0    
     rolling_max_close_diff = ((df['close'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
     df['buy']=(rolling_max_close_diff >= mino).astype(int)
     return df
 
-def buy_alwase(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_alwase(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     df['buy']=1
     return df
 
 
-def sell_test(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def sell_test(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
-        print (f"---sell_test--- Sell percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---sell_test--- Sell pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((( '
         for i in range(1,window):
             codep1=codep1+'df["low"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] <=maxo ) | (('
@@ -880,16 +904,16 @@ def pair_btc(pair="LTC/USDT",window=2):
 
 
 
-def buy_results(df,min_pourcent=BUY_PERCENT):
-    mino=min_pourcent*0.01
+def buy_results(df,min_pct=BUY_PCT):
+    mino=min_pct*0.01
     df["buy"]=(
         ((df["high"].shift(periods=1, freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| ((
           df["high"].shift(periods=2, freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| ((
           df["high"].shift(periods=3, freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino)
     ).replace({False: 0, True: 1}) 
  
-def buy_results_gen(df,min_pourcent=BUY_PERCENT,window=3):
-    mino=min_pourcent*0.01
+def buy_results_gen(df,min_pct=BUY_PCT,window=3):
+    mino=min_pct*0.01
     codep1='df["buy"]=((('
     for i in range(1,window):
         codep1=codep1+'df["high"].shift(periods='+str(i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -898,9 +922,9 @@ def buy_results_gen(df,min_pourcent=BUY_PERCENT,window=3):
     print(code)
     exec(code)
 
-def buy_sell(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
-    mino=buy_pourcent*0.01
-    maxo=-sell_pourcent*0.01
+def buy_sell(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
+    mino=BUY_PCT*0.01
+    maxo=-SELL_PCT*0.01
     codep1='df["buy"]=((('
     for i in range(1,window):
         codep1=codep1+'df["high"].shift(periods='+str(i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -917,9 +941,9 @@ def buy_sell(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     exec(code)
     df["bs"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
 
-def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
-    mino=buy_pourcent*0.01
-    maxo=-sell_pourcent*0.01
+def buy_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
+    mino=BUY_PCT*0.01
+    maxo=-SELL_PCT*0.01
     codep1='df["buy"]=((('
     for i in range(1,window):
         codep1=codep1+'df["high"].shift(periods='+str(i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -978,7 +1002,7 @@ def mini_expand2(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData):
             right_index=True, suffixes=('', ''))
     day_expand(Merged)
     Meta_expand(Merged,metadata,pair)
-    buy_sell(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=7)
+    buy_sell(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=7)
     return Merged
 
 def mini_expand3(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=3):
@@ -997,8 +1021,8 @@ def mini_expand3(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData,high_wei
             right_index=True, suffixes=('', ''))
     day_expand(Merged)
     Meta_expand(Merged,metadata,pair)
-    #buy_sell(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE)
-    buy_only(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE)
+    #buy_sell(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
+    buy_only(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
     Merged["high"]=(Merged["open"]+high_weight*Merged["high"]+Merged["low"]+Merged["close"])/(3+high_weight)
     Merged.rename(columns={"high":"price"},inplace = True)
     Merged["BTC_high"]=(Merged["BTC_open"]+high_weight*Merged["BTC_high"]+Merged["BTC_low"]+Merged["BTC_close"])/(3+high_weight)
@@ -1028,7 +1052,7 @@ def mini_expand3old(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData,high_
             right_index=True, suffixes=('', ''))
     day_expand(Merged)
     Meta_expand(Merged,metadata,pair)
-    buy_sell(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE)
+    buy_sell(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
     Merged["high"]=(Merged["open"]+high_weight*Merged["high"]+Merged["low"]+Merged["close"])/(3+high_weight)
     Merged.rename(columns={"high":"price"},inplace = True)
     Merged["BTC_high"]=(Merged["BTC_open"]+high_weight*Merged["BTC_high"]+Merged["BTC_low"]+Merged["BTC_close"])/(3+high_weight)
@@ -1066,7 +1090,7 @@ def pair_data_gen(pair="LTC/USDT",i=0,j=100000,window=3,metadata=MetaData):
         j=(mx+1)*j,
         window=window,metadata=metadata)],axis=0)
         # Meta_expand(df,metadata,pair)
-        # buy_sell(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=7)
+        # buy_sell(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=7)
         #print("loop "+str(mx)+"--> size of df: "+str(len(df)))
     return df
 
@@ -1223,15 +1247,15 @@ def normalize(dataset,file=Normalization_File):
 
 
 # Costumaize buy condition here
-def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
         ## test param
-        #buy_pourcent=1
+        #BUY_PCT=1
         window=15
-        print (f"---buy_only--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_only--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         # codep1='df["b"]=((('
         # for i in range(1,window):
         #     codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1270,8 +1294,8 @@ def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
         exec(code)
 
 
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["b30"]=((('
         for i in range(1,30):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1281,8 +1305,8 @@ def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
         exec(code)
 
 
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["b60"]=((('
         for i in range(1,60):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1291,8 +1315,8 @@ def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
         prerr(code)
         exec(code)
 
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["b180"]=((('
         for i in range(1,180):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1404,16 +1428,16 @@ def buy_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
     return df
 
 # Costumaize buy condition here
-def buy_up_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_up_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
         ## test param
-        #buy_pourcent=1
+        #BUY_PCT=1
         #window=15
-        print (f"---buy_only--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
+        print (f"---buy_only--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
         print (f"---buy_only--- Max time window: {window}%")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["b"]=((('
         #codep1='df["buy"]=((('
         for i in range(1,window):
@@ -1448,16 +1472,16 @@ def buy_up_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3)
 
 
 # Costumaize buy condition here
-def buy_up_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_up_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
         ## test param
-        #buy_pourcent=1
+        #BUY_PCT=1
         #window=15
-        print (f"---buy_up_only--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
+        print (f"---buy_up_only--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
         print (f"---buy_only--- Max time window: {window}%")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["b"]=((('
         #codep1='df["buy"]=((('
         for i in range(1,window):
@@ -1492,13 +1516,13 @@ def buy_up_only(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3)
 
 
 # Costumaize buy condition here
-def buy_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_up(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_simple_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
+        print (f"---buy_simple_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
         print (f"---buy_only--- Max time window: {window}%")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1517,11 +1541,11 @@ def buy_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
 
     return df
 
-def buy_after_depth_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_after_depth_close(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -1558,11 +1582,11 @@ def buy_after_depth_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT
     return df
 
 
-def buy_after_depth_closeV1(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_after_depth_closeV1(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1598,13 +1622,13 @@ def buy_after_depth_closeV1(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCE
     except:print("---buy_after_depth--- no sell")
     return df
 
-def buy_up_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_up_close(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_simple_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
+        print (f"---buy_simple_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
         print (f"---buy_only--- Max time window: {window}%")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -1623,13 +1647,13 @@ def buy_up_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3
 
     return df
 
-def buy_up_close2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_up_close2(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_simple_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
+        print (f"---buy_simple_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
         print (f"---buy_only--- Max time window: {window}%")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["close"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1651,12 +1675,12 @@ def buy_up_close2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=
 
 
 # Costumaize buy condition here
-def buy_min_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_min_up(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_min_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_min_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1681,12 +1705,12 @@ def buy_min_up(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
 
     return df
 
-def buy_min_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_min_close(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_min_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_min_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["close"])/df["close"] >=mino )| (('
@@ -1711,19 +1735,19 @@ def buy_min_close(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=
 
     return df
 
-# def buy_test2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+# def buy_test2(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
 #     max_forecast_size=window#MAX_FORCAST_SIZE
 #     after_dip_val=1
-#     print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {buy_pourcent}% of the current price ")
-#     mino = buy_pourcent / 100.0    
+#     print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {BUY_PCT}% of the current price ")
+#     mino = BUY_PCT / 100.0    
 #     rolling_max_close_diff = ((df['close'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
 #     df['buy']=(rolling_max_close_diff >= mino).astype(int)
     return df
 
-def buy_optimal(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE):
+def buy_optimal(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE):
     #df = df.fillna(0)
-    mino = buy_pourcent / 100.0
-    maxo = sell_pourcent / 100.0
+    mino = BUY_PCT / 100.0
+    maxo = SELL_PCT / 100.0
     
     max_forecast_size=window#MAX_FORCAST_SIZE
     try:
@@ -1732,7 +1756,7 @@ def buy_optimal(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MA
         after_dip_val=1
     print(f"after mark = : {after_dip_val}")
     try:
-        print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {buy_pourcent}% of the current price ")
+        print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {BUY_PCT}% of the current price ")
     except:
         max_forecast_size = 3
         print("optimalbuy buy default window=3")
@@ -1762,12 +1786,12 @@ def buy_optimal(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MA
     df = df.drop(columns=['sell', 'ismin'] + [f'ismin{window_size}' for window_size in window_list], errors='ignore')
     return df
 
-def buy_after_depth(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_after_depth(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1803,12 +1827,12 @@ def buy_after_depth(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,windo
     except:print("---buy_after_depth--- no sell")
     return df
 
-def buy_after_depth2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_after_depth2(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_after_depth--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_after_depth--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )& (('
@@ -1844,12 +1868,12 @@ def buy_after_depth2(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,wind
     except:print("---buy_after_depth--- no sell")
     return df
 
-def buy_the_dip(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3):
+def buy_the_dip(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     try:
         
-        print (f"---buy_min_up--- Buy percent: {buy_pourcent}% MaxForcastSize: {window}")
-        mino=buy_pourcent*0.01
-        maxo=-sell_pourcent*0.01
+        print (f"---buy_min_up--- Buy pct: {BUY_PCT}% MaxForcastSize: {window}")
+        mino=BUY_PCT*0.01
+        maxo=-SELL_PCT*0.01
         codep1='df["buy"]=((('
         for i in range(1,window):
             codep1=codep1+'df["high"].shift(periods='+str(-i)+', freq=None, axis=0, fill_value=None)-df["high"])/df["high"] >=mino )| (('
@@ -1874,7 +1898,7 @@ def buy_the_dip(df,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=3)
 
     return df
 
-def mini_expand4(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,buy_function=buy_min_up):
+def mini_expand4(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=1,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,buy_function=buy_min_up):
     print(f"mini_expand : {pair}")
     Pair_Full=full_expand(df_list1m[pair].iloc[i:j],df_list5m[pair],df_list15m[pair],df_list1h[pair],df_list1d[pair],window)
     BTC_Full=full_expand(
@@ -1891,8 +1915,8 @@ def mini_expand4(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_wei
             right_index=True, suffixes=('', ''))
     day_expand(Merged)
     Meta_expand(Merged,metadata,pair)
-    #buy_sell(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE)
-    buy_function(Merged,buy_pourcent=buy_pourcent,sell_pourcent=sell_pourcent,window=MAX_FORCAST_SIZE)
+    #buy_sell(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
+    buy_function(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
     Merged["high"]=(Merged["open"]+high_weight*Merged["high"]+Merged["low"]+Merged["close"])/(3+high_weight)
     Merged.rename(columns={"high":"price"},inplace = True)
     Merged["BTC_high"]=(Merged["BTC_open"]+high_weight*Merged["BTC_high"]+Merged["BTC_low"]+Merged["BTC_close"])/(3+high_weight)
@@ -1909,7 +1933,8 @@ def mini_expand4(pair="GMT/USDT",i=0,j=10000,window=2,metadata=MetaData,high_wei
     Merged=Merged.dropna()
     return Merged
 
-def mini_expand4_btc(i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT):
+    meta_expend=Meta_expand
+def mini_expand4_btc(i=0,j=10000,window=2,metadata=MetaData,high_weight=1,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT):
     pair="BTC/USDT"
     Pair_Full=full_expand(df_list1m[pair].iloc[i:j],df_list5m[pair],df_list15m[pair],df_list1h[pair],df_list1d[pair],window)
     
@@ -1918,8 +1943,8 @@ def mini_expand4_btc(i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_po
     Merged=Pair_Full
     day_expand(Merged)
     Meta_expand(Merged,metadata,pair)
-    #buy_sell(Merged,buy_pourcent=BUY_PERCENT,sell_pourcent=SELL_PERCENT,window=MAX_FORCAST_SIZE)
-    buy_function(Merged,buy_pourcent=buy_pourcent,sell_pourcent=sell_pourcent,window=MAX_FORCAST_SIZE)
+    #buy_sell(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
+    buy_function(Merged,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE)
     Merged["high"]=(Merged["open"]+high_weight*Merged["high"]+Merged["low"]+Merged["close"])/(3+high_weight)
     Merged.rename(columns={"high":"price"},inplace = True)
 
@@ -1931,6 +1956,82 @@ def mini_expand4_btc(i=0,j=10000,window=2,metadata=MetaData,high_weight=1,buy_po
             Merged[key]=(Merged["price"]-Merged[key])/Merged["price"]
     Merged=Merged.dropna()
     return Merged
+
+def mini_expand5(pair="GMT/USDT", i=0, j=10000, window=2, metadata=MetaData,
+                 high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                 buy_function=buy_alwase):
+    start_index=i
+    end_index=j
+    window_size=window
+    buy_fn=buy_function
+    """
+    This function takes in several parameters to calculate technical indicators and returns a merged dataframe.
+    
+    :param pair: str, default "GMT/USDT"
+        The trading pair to analyze.
+        
+    :param start_index: int, default 0
+        The start index for selecting data.
+        
+    :param end_index: int, default 10000
+        The end index for selecting data.
+    
+    :param window_size: int, default 2
+        The window size to use for analyzing the data.
+    
+    :param metadata: MetaData
+        The metadata to use for analyzing the data.
+    
+    :param high_weight: int, default 1
+        The weight to use for calculating the high.
+    
+    :param BUY_PCT: float, default BUY_PCT
+        The buy pct to use for analyzing the data.
+    
+    :param SELL_PCT: float, default SELL_PCT
+        The sell pct to use for analyzing the data.
+    
+    :param buy_fn: function, default buy_min_up
+        The buy function to use for analyzing the data.
+    
+    :return: pd.DataFrame
+        A merged dataframe containing the calculated technical indicators.
+    """
+    print(f"mini_expand : {pair}")
+    # Select data
+    pair_df = df_list1m[pair].iloc[start_index:end_index]
+    btc_df = df_list1m["BTC/USDT"].loc[(pair_df.index[0] - pd.DateOffset(days=window_size+1)).round(freq='1 min'):pair_df.index[-1]+pd.Timedelta(f"{window_size} day")]
+    # Calculate technical indicators
+    pair_full = full_expand(pair_df, df_list5m[pair], df_list15m[pair], df_list1h[pair], df_list1d[pair], window_size)
+    btc_full = full_expand(btc_df, df_list5m["BTC/USDT"], df_list15m["BTC/USDT"], df_list1h["BTC/USDT"], df_list1d["BTC/USDT"], window_size)   
+    btc_full = btc_full.add_prefix("BTC_")
+    merged = pd.merge(pair_full, btc_full, left_index=True, right_index=True)
+    day_expand(merged)
+    Meta_expand(merged, metadata, pair)
+    merged = buy_fn(merged, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=MAX_FORCAST_SIZE)
+    merged["high"] = (merged["open"] + high_weight * merged["high"] + merged["low"] + merged["close"]) / (3 + high_weight)
+    merged["BTC_high"] = (merged["BTC_open"] + high_weight * merged["BTC_high"] + merged["BTC_low"] + merged["BTC_close"]) / (3 + high_weight)
+    merged.rename(columns={"high":"price"},inplace=True)
+    merged.rename(columns={"BTC_high":"BTC_price"},inplace=True)
+    merged = merged.drop(columns=["BTC_open","BTC_low","BTC_close","open","low","close"])
+    open_high_low_close_cols = merged.columns.str.contains("open|high|low|close")
+    # merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")] = (
+    #     (merged["BTC_price"] - merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")]) / merged["BTC_price"]
+    # )
+    # merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")] = (
+    #     (merged["price"] - merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")]) / merged["price"]
+    # )
+    for key in merged.keys():
+        if key.find("BTC")!=-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["BTC_price"]-merged[key])/merged["BTC_price"]
+        if key.find("BTC")==-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["price"]-merged[key])/merged["price"]
+
+    merged=merged.dropna()
+    print(f'######################  mini_expand5 {pair} - shape {merged.shape}  buy mean : {hp(merged.buy.mean())} ############################')
+    return merged
 
 def data_chooser50(df,row_numbers=100000):
     
@@ -1948,11 +2049,11 @@ def data_chooser50(df,row_numbers=100000):
     return df
 
 
-def human_percent(float_percent,type_string="Precent Mean",ShowMessage=True):
-    nb=round(float_percent*100,3)
+def human_pct(float_pct,type_string="Precent Mean",ShowMessage=True):
+    nb=round(float_pct*100,3)
     if ShowMessage: print(type_string+": "+"{:.3f}".format(nb)+"%")
     return nb
-hp=human_percent
+hp=human_pct
 
 
 def fixdt(dt):
@@ -1967,6 +2068,20 @@ def find_intersection(list1, list2):
     set2 = set(list2)
     intersection = set1.intersection(set2)
     return list(intersection)
+
+def find_outersection(list1, list2):
+    """
+    Finds the outersection of two lists, i.e. the items that appear in only one of the lists.
+    
+    Args:
+        list1 (list): The first list.
+        list2 (list): The second list.
+    
+    Returns:
+        list: The outersection of the two lists.
+    """
+    intersection = set(list1).intersection(set(list2))
+    return list(filter(lambda x: x not in intersection, list1 + list2))
 
 
 import requests
@@ -2018,7 +2133,6 @@ def add_technical_indicators(df):
 
 ## Ploter
 import matplotlib.pyplot as plt
-import numpy as np
 
 def plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, window_size, PREDICTION_TO_TEST,dot_color="g"):
     i_end=i_start+window_size
@@ -2036,3 +2150,86 @@ def plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, windo
     plt.title(mtitle)
     
     plt.show()
+
+
+
+def get_closest_index(df, date):
+    idx = df.index.searchsorted(date)
+    if idx >= len(df):
+        return len(df) - 1
+    elif idx == 0:
+        return 0
+    else:
+        before = df.index[idx - 1]
+        after = df.index[idx]
+        if after - date < date - before:
+            return idx
+        else:
+            return idx - 1
+
+
+def mini_expand6(pair="GMT/USDT", i=0, j=10000, window=2, metadata=MetaData,
+                 high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                 buy_function=buy_alwase):
+    start_index=i
+    end_index=j
+    window_size=window
+    buy_fn=buy_function    
+    print(f"mini_expand : {pair}")
+    pair_df = df_list1m[pair][start_index:end_index]
+    btc_df = df_list1m["BTC/USDT"].loc[(pair_df.index[0] - pd.DateOffset(days=window_size+1)).round(freq='1 min'):pair_df.index[-1]+pd.Timedelta(f"{window_size} day")]
+    pair_full = full_expand(pair_df, df_list5m[pair], df_list15m[pair], df_list1h[pair], df_list1d[pair], window_size)
+    btc_full = full_expand(btc_df, df_list5m["BTC/USDT"], df_list15m["BTC/USDT"], df_list1h["BTC/USDT"], df_list1d["BTC/USDT"], window_size)   
+    btc_full = btc_full.add_prefix("BTC_")
+    merged = pd.concat([pair_full, btc_full], axis=1)
+    day_expand(merged)
+    Meta_expand(merged, metadata, pair)
+    merged = buy_fn(merged, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=MAX_FORCAST_SIZE)
+    merged["high"] = (merged["open"] + high_weight * merged["high"] + merged["low"] + merged["close"]) / (3 + high_weight)
+    merged["BTC_high"] = (merged["BTC_open"] + high_weight * merged["BTC_high"] + merged["BTC_low"] + merged["BTC_close"]) / (3 + high_weight)
+    merged.rename(columns={"high":"price", "BTC_high":"BTC_price"}, inplace=True)
+    merged = merged.drop(columns=["BTC_open","BTC_low","BTC_close","open","low","close"])
+    btc_price = merged["BTC_price"]
+    merged = merged.filter(regex="(BTC|open|high|low|close)")
+    merged = (btc_price - merged) / btc_price
+    merged = merged.dropna()
+    print(f'######################  mini_expand5 {pair} - shape {merged.shape}  buy mean : {hp(merged.buy.mean())} ############################')
+    return merged
+
+
+
+
+def get_coingekko_list(coingekko_info_file):
+    try:
+        df = pd.read_csv(coingekko_info_file)
+        return df
+    except FileNotFoundError:
+        url = 'https://api.coingecko.com/api/v3/coins/list'
+        response = requests.get(url)
+        data = response.json()
+        df = pd.DataFrame(data)
+        df.to_csv(coingekko_info_file, index=False)
+        return df
+
+def uniq_coins_lower(pair_list):
+    list(set([symbol.split('/')[0].replace("BUSD","").replace("USDT", "").lower() for symbol in ALL_USDT_BUSD_PAIRS] ))
+    
+def uniq_coins_upper(pair_list):
+    list(set([symbol.split('/')[0].replace("BUSD","").replace("USDT", "").upper() for symbol in ALL_USDT_BUSD_PAIRS] ))
+    
+def uniq_coins(pair_list):
+    list(set([symbol.split('/')[0].replace("BUSD","").replace("USDT", "").lower() for symbol in ALL_USDT_BUSD_PAIRS] ))
+    
+    
+import os
+import glob
+
+def find_matching_files(path, pattern):
+    pattern = os.path.join(path, pattern)
+    matching_files = []
+    
+    for file_path in glob.iglob(pattern, recursive=True):
+        if os.path.isfile(file_path):
+            matching_files.append(file_path)
+    
+    return matching_files

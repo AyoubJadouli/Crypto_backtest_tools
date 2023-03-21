@@ -1,8 +1,8 @@
 #!/bin/python
 ##
 WINDOW_SIZE=31
-BUY_PERCENT=0.6
-SELL_PERCENT=0.33
+BUY_PCT=0.6
+SELL_PCT=0.33
 MAX_FORCAST_SIZE=9
 VERSION=1
 TESTING_MOD=False
@@ -14,10 +14,10 @@ ALLHIST_FILE='Results_history.json'
 DATA_DIR='/UltimeTradingBot/Data/'
 FIRST_NORM_FLAG=True
 DATA_DIR='/UltimeTradingBot/Data'
-Normalization_File=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Norm_v{VERSION}.json'
-Model_FileName=f'{DATA_DIR}/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Model_v{VERSION}.hdf5'
-DATA_FILE=f'{DATA_DIR}/CSV/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv'
-REMOTE_DATA_FILE=f'/gdrive/+DATA+/tp{int(BUY_PERCENT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv.zip'
+Normalization_File=f'{DATA_DIR}/tp{int(BUY_PCT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Norm_v{VERSION}.json'
+Model_FileName=f'{DATA_DIR}/tp{int(BUY_PCT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Model_v{VERSION}.hdf5'
+DATA_FILE=f'{DATA_DIR}/CSV/tp{int(BUY_PCT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv'
+REMOTE_DATA_FILE=f'/gdrive/+DATA+/tp{int(BUY_PCT*100)}_w{WINDOW_SIZE}_max{MAX_FORCAST_SIZE}min_Data_v{VERSION}.csv.zip'
 window=WINDOW_SIZE
 NORM_FILE=Normalization_File
 MODEL_FILE=Model_FileName
@@ -55,7 +55,7 @@ def argpars(argv):
     global arg_bp
     global arg_f
 
-    arg_help = "{0} -w <window size> -s <startpoint> -e <endpoint>  -o <output> -p <parts numbre> -S <Sample size> -W <weight percentage> -P <buy signal percent>".format(argv[0])
+    arg_help = "{0} -w <window size> -s <startpoint> -e <endpoint>  -o <output> -p <parts numbre> -S <Sample size> -W <weight pctage> -P <buy signal pct>".format(argv[0])
     
     try:
         opts, args = getopt.getopt(argv[1:], "h:w:s:e:o:p:S:W:P:F:", ["help", "window=", 
@@ -128,13 +128,13 @@ if  arg_sample:
 if  arg_weight:
     PER_WEIGHT=float(arg_weight)
 if  arg_bp:
-    BUY_PERCENT=float(arg_bp)
+    BUY_PCT=float(arg_bp)
 if  arg_f:
     MAX_FORCAST_SIZE=int(arg_f)
 
 DATA_FILE=DATA_FILE+DATAPART
 
-META_INFO=f'Window: {WINDOW_SIZE} - Focast time: {MAX_FORCAST_SIZE}min - Buy treshold: {BUY_PERCENT}% - Max Down: {SELL_PERCENT}%'
+META_INFO=f'Window: {WINDOW_SIZE} - Focast time: {MAX_FORCAST_SIZE}min - Buy treshold: {BUY_PCT}% - Max Down: {SELL_PCT}%'
 
 print(f"working on generataing Data: {META_INFO}")
 print(f"file will be saved in {DATA_FILE}")
