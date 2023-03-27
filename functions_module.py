@@ -2153,6 +2153,36 @@ def plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, windo
 
 
 
+# Import necessary libraries
+import pandas as pd
+import mplfinance as mpf
+
+def plot_ohlcv(df,title, start_date, end_date):
+    """
+    Plots OHLCV data using mplfinance library.
+
+    Args:
+    df (pd.DataFrame): Dataframe containing OHLCV data with columns ['date', 'open', 'high', 'low', 'close', 'volume'].
+    start_date (str): Start date of the plot in the format 'YYYY-MM-DD'.
+    end_date (str): End date of the plot in the format 'YYYY-MM-DD'.
+    """
+
+    # # Ensure the index is of type datetime and sorted
+    # df['date'] = pd.to_datetime(df['date'])
+    # df = df.set_index('date')
+    # df = df.sort_index()
+
+    # Filter the data between start_date and end_date
+    mask = (df.index >= start_date) & (df.index <= end_date)
+    filtered_df = df.loc[mask]
+
+    # Set the plot size to full width
+    fig_width = 25
+    fig_height = 9
+
+    # Plot the OHLCV chart
+    mpf.plot(filtered_df, type='candle', style='charles', volume=True, title=title, ylabel='Price', ylabel_lower='Volume', figratio=(fig_width, fig_height),  tight_layout=True)
+
 def get_closest_index(df, date):
     idx = df.index.searchsorted(date)
     if idx >= len(df):
