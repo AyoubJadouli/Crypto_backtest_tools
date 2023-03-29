@@ -2263,3 +2263,10 @@ def find_matching_files(path, pattern):
             matching_files.append(file_path)
     
     return matching_files
+
+
+
+PDEBUG=False
+def pdebug(err):
+    if PDEBUG:
+        print("\033[0;31m Debug msg: "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
