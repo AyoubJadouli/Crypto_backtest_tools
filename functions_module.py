@@ -2270,3 +2270,15 @@ PDEBUG=False
 def pdebug(err):
     if PDEBUG:
         print("\033[0;31m Debug msg: "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
+        
+        
+#!pip install psutil  # install psutil package if not already installed
+
+import psutil
+
+# Get the memory usage of the Jupyter Notebook process
+process = psutil.Process()
+memory_info = process.memory_info()
+
+# Print the memory usage in MB
+print(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
