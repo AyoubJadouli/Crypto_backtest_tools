@@ -511,6 +511,60 @@ def buy_test(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     except:print("---buy_after_depth--- no sell")
     return df
 
+def is_local_min(df, BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is a local minimum.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    window (int): The window size for computing local minimum.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating local minimum.
+    """
+    # Compute rolling minimum close
+    rolling_min_close = df['close'].rolling(window=window, center=True, min_periods=1).min()
+
+    # Check if close price is a local minimum
+    local_min = (df['close'] == rolling_min_close).astype(int)
+
+    # Add the local minimum column to the DataFrame
+    df['buy'] = local_min
+
+    return df
+
+def is_max_win(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is a winning trade.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    BUY_PCT (float): Minimum percentage change required for a trade to be profitable.
+    window (int): The window size for computing maximum price change.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating winning trades.
+    """
+    # Compute rolling minimum close
+    rolling_min_close = df['close'].rolling(window=7, center=True, min_periods=1).min()
+
+    # Check if close price is a local minimum
+    local_min = (df['close'] == rolling_min_close)
+
+    # Compute maximum price change over next `window` rows
+    # max_price = df['close'].rolling(window=window, min_periods=1).max()
+    # max_price_shifted = max_price.shift(-window)
+    # max_price_change = ((max_price_shifted - max_price)/max_price).fillna(0)
+    max_price = df['close'].shift(periods=-window+1).rolling(window=window, min_periods=1).max()#.pct_change(window=window-1)
+
+    # Check if the maximum price change is greater than the BUY_PCT threshold
+    win = (max_price >= (BUY_PCT/100+1)*df['close'])
+
+    # Combine local minimum and winning trade conditions
+    df['buy'] = (local_min & win).astype(int)
+
+    return df
+
 def buy_test2(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     max_forecast_size=window#MAX_FORCAST_SIZE
     after_dip_val=1
@@ -2282,3 +2336,214 @@ memory_info = process.memory_info()
 
 # Print the memory usage in MB
 print(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f} MB")
+
+
+
+def buy_optimal_5m(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=MAX_FORCAST_SIZE):
+    #df = df.fillna(0)
+    mino = BUY_PCT / 100.0
+    maxo = SELL_PCT / 100.0
+    window=max(7,int(window/5))
+    max_forecast_size=window#MAX_FORCAST_SIZE
+    try:
+        after_dip_val=AFTER_MARK
+    except:
+        after_dip_val=3
+    print(f"after mark = : {after_dip_val}")
+    try:
+        print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {BUY_PCT}% of the current price ")
+    except:
+        max_forecast_size = 3
+        print("optimalbuy buy default window=3")
+        
+    rolling_max_close_diff = ((df['close-1_5min'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
+    df['buy']=(rolling_max_close_diff >= mino).astype(int)
+    
+    # Compute rolling minimum values
+    window_list=[window]#[3, 5, 7, 10, 15, 20]
+    
+    for window_size in window_list:
+        col_name = f'ismin{window_size}'
+        rolling_min = (df['close'].shift(after_dip_val) <= df.shift(-window_size-1)['close-1_5min'].rolling(2*window_size).min())
+        df = df.assign(**{col_name: rolling_min.astype(int)})
+
+    df['ismin'] = df[[f'ismin{window_size}' for window_size in window_list ]].any(axis=1).astype(int)        
+
+    # # Compute buy and sell signals
+    rolling_low_close_diff =  ((df['low-1_5min'].rolling(window=int(window/2)).min().shift(-int(window/2)+1)/ df['close'] ) -1).fillna(0)
+    df['sell'] = (rolling_low_close_diff <= -maxo).astype(int)
+
+    
+    # Compute final buy signal
+    df['buy'] = ((df['buy'] == 1) & (df['sell'] == 0) & (df['ismin'] == 1)).astype(int)
+    # Remove unnecessary columns
+    df = df.drop(columns=['sell', 'ismin'] + [f'ismin{window_size}' for window_size in window_list], errors='ignore')
+    return df
+
+
+
+def full_expand_costum(df1m,df5m,df15m,df1h,df1d,w1m=10,w5m=30,w15m=30,w1h=3,w1d=7):
+    d1min=df1m.copy()
+    d1min=expand_previous(d1min,window=w1m).drop(columns=["volume"])
+    d1min=rapid1d_expand(d1min,df1d,w1d)
+    d1min=rapid1h_expand(d1min,df1h,w1h)
+    d1min=rapid15m_expand(d1min,df15m,w15m)
+    d1min=rapid5m_expand(d1min,df5m,w5m)
+    return d1min
+
+def maxi_expand(pair="GMT/USDT", i=0, j=10000, window=2, metadata=MetaData,
+                 high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                 buy_function=buy_alwase,w1m=6,w5m=30,w15m=30,w1h=3,w1d=7,btc_w1m=6,btc_w5m=4,btc_w15m=5,btc_w1h=30,btc_w1d=30):
+    start_index=i
+    end_index=j
+    window_size=window
+    buy_fn=buy_function
+    """
+    This function takes in several parameters to calculate technical indicators and returns a merged dataframe.
+    
+    :param pair: str, default "GMT/USDT"
+        The trading pair to analyze.
+        
+    :param start_index: int, default 0
+        The start index for selecting data.
+        
+    :param end_index: int, default 10000
+        The end index for selecting data.
+    
+    :param window_size: int, default 2
+        The window size to use for analyzing the data.
+    
+    :param metadata: MetaData
+        The metadata to use for analyzing the data.
+    
+    :param high_weight: int, default 1
+        The weight to use for calculating the high.
+    
+    :param BUY_PCT: float, default BUY_PCT
+        The buy pct to use for analyzing the data.
+    
+    :param SELL_PCT: float, default SELL_PCT
+        The sell pct to use for analyzing the data.
+    
+    :param buy_fn: function, default buy_min_up
+        The buy function to use for analyzing the data.
+    
+    :return: pd.DataFrame
+        A merged dataframe containing the calculated technical indicators.
+    """
+    print(f"maxi expend : {pair} with those parameters: w1m={w1m},w5m={w5m},w15m={w15m},w1h={w1h},w1d={w1d} btc_w1m={btc_w1m},btc_w5m={btc_w5m},btc_w15m={btc_w15m},btc_w1h={btc_w1h},btc_w1d={btc_w1d}")
+    # Select data
+    pair_df = df_list1m[pair].iloc[start_index:end_index]
+    btc_df = df_list1m["BTC/USDT"].loc[(pair_df.index[0] - pd.DateOffset(days=window_size+1)).round(freq='1 min'):pair_df.index[-1]+pd.Timedelta(f"{window_size} day")]
+    # Calculate technical indicators
+    pair_full = full_expand_costum(pair_df, df_list5m[pair], df_list15m[pair], df_list1h[pair], df_list1d[pair],w1m=w1m,w5m=w5m,w15m=w15m,w1h=w1h,w1d=w1d)
+    btc_full = full_expand_costum(btc_df, df_list5m["BTC/USDT"], df_list15m["BTC/USDT"], df_list1h["BTC/USDT"], df_list1d["BTC/USDT"], w1m=btc_w1m,w5m=btc_w5m,w15m=btc_w15m,w1h=btc_w1h,w1d=btc_w1d)   
+    btc_full = btc_full.add_prefix("BTC_")
+    merged = pd.merge(pair_full, btc_full, left_index=True, right_index=True)
+    day_expand(merged)
+    Meta_expand(merged, metadata, pair)
+    print(merged.columns)
+    merged = buy_fn(merged, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=MAX_FORCAST_SIZE)
+    merged["high"] = (merged["open"] + high_weight * merged["high"] + merged["low"] + merged["close"]) / (3 + high_weight)
+    merged["BTC_high"] = (merged["BTC_open"] + high_weight * merged["BTC_high"] + merged["BTC_low"] + merged["BTC_close"]) / (3 + high_weight)
+    merged.rename(columns={"high":"price"},inplace=True)
+    merged.rename(columns={"BTC_high":"BTC_price"},inplace=True)
+    merged = merged.drop(columns=["BTC_open","BTC_low","BTC_close","open","low","close"])
+    open_high_low_close_cols = merged.columns.str.contains("open|high|low|close")
+    # merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")] = (
+    #     (merged["BTC_price"] - merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")]) / merged["BTC_price"]
+    # )
+    # merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")] = (
+    #     (merged["price"] - merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")]) / merged["price"]
+    # )
+    for key in merged.keys():
+        if key.find("BTC")!=-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["BTC_price"]-merged[key])/merged["BTC_price"]
+        if key.find("BTC")==-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["price"]-merged[key])/merged["price"]
+
+    merged=merged.dropna()
+    print(f'######################  Max Expend {pair} - shape {merged.shape}  buy mean : {hp(merged.buy.mean())} ############################')
+    return merged
+
+
+
+
+def is_max_win(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is a winning trade.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    BUY_PCT (float): Minimum percentage change required for a trade to be profitable.
+    window (int): The window size for computing maximum price change.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating winning trades.
+    """
+    # Compute rolling minimum close
+    rolling_min_close = df['close'].rolling(window=7, center=True, min_periods=1).min()
+
+    # Check if close price is a local minimum
+    local_min = (df['close'] == rolling_min_close)
+
+    # Compute maximum price change over next `window` rows
+    # max_price = df['close'].rolling(window=window, min_periods=1).max()
+    # max_price_shifted = max_price.shift(-window)
+    # max_price_change = ((max_price_shifted - max_price)/max_price).fillna(0)
+    max_price = df['close'].shift(periods=-window+1).rolling(window=window, min_periods=1).max()#.pct_change(window=window-1)
+
+    # Check if the maximum price change is greater than the BUY_PCT threshold
+    win = (max_price >= (BUY_PCT/100+1)*df['close'])
+
+    # Combine local minimum and winning trade conditions
+    df['buy'] = (local_min & win).astype(int)
+
+    return df
+
+def is_close_win(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is a winning trade.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    BUY_PCT (float): Minimum percentage change required for a trade to be profitable.
+    window (int): The window size for computing maximum price change.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating winning trades.
+    """
+
+    max_price = df['close'].shift(periods=-window+1).rolling(window=window, min_periods=1).max()#.pct_change(window=window-1)
+
+    # Check if the maximum price change is greater than the BUY_PCT threshold
+    win = (max_price >= (BUY_PCT/100+1)*df['close'])
+
+    # Combine local minimum and winning trade conditions
+    df['buy'] = (win).astype(int)
+
+    return df
+
+def is_high_win(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is a winning trade.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    BUY_PCT (float): Minimum percentage change required for a trade to be profitable.
+    window (int): The window size for computing maximum price change.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating winning trades.
+    """
+    max_price = df['high'].shift(periods=-window+1).rolling(window=window, min_periods=1).max()#.pct_change(window=window-1)
+
+    # Check if the maximum price change is greater than the BUY_PCT threshold
+    win = (max_price >= (BUY_PCT/100+1)*df['close'])
+
+    # Combine local minimum and winning trade conditions
+    df['buy'] = (win).astype(int)
+
+    return df
