@@ -25,6 +25,21 @@ def find_matching_files(path, pattern):
             matching_files.append(file_path)
     
     return matching_files
+
+import warnings
+warnings.filterwarnings('ignore')
+PRERR=False
+def prerr(err):
+    if PRERR:
+        print("\033[0;31m Error in "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
+
+PDEBUG=True
+def pdebug(err):
+    if PDEBUG:
+        print("\033[0;31m Error in "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
+        
+        
+        
 PDEBUG=False
 def pdebug(err):
     if PDEBUG:
@@ -33,6 +48,7 @@ def pdebug(err):
 MetaData=pd.DataFrame()
 PRECISION = 0.0
 
+USE_TRAILING_STOP_LOSS=False
 
 BUY_PCT=0.5
 SELL_PCT=0.3
@@ -56,7 +72,15 @@ TRADE_TOTAL= 100
 TRADE_SLOTS= 5
 
 TRADING_FEE= 0.1
-  
+
+
+
+
+df_list1m={}
+df_list5m={}
+df_list15m={}
+df_list1h={}
+df_list1d={}
 
 def plot_ohlcv(df,title, start_date, end_date):
     """
@@ -286,7 +310,7 @@ def generate_signals_optimized(ALLTOP20VOLUMES, df_list1m, WINDOW_SIZE, MetaData
     return SIGNAL_DF
 
 
-def get_top_volumes(start_period,end_period):
+def get_top_volumes(start_period,end_period,df_list1d=df_list1d):
     ALLTOP20VOLUMES={}
     for day in df_list1d["BTC/USDT"].index:
         if start_period<= day <= end_period:
@@ -765,3 +789,391 @@ def uniq_coins(pair_list):
     
     
     
+
+
+def buy_optimal_5m(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=15):
+    #df = df.fillna(0)
+    mino = BUY_PCT / 100.0
+    maxo = SELL_PCT / 100.0
+    window=max(7,int(window/5))
+    max_forecast_size=window#MAX_FORCAST_SIZE
+    try:
+        after_dip_val=AFTER_MARK
+    except:
+        after_dip_val=3
+    print(f"after mark = : {after_dip_val}")
+    try:
+        print(f"optimalbuy buy maximum forcast size={max_forecast_size} at {BUY_PCT}% of the current price ")
+    except:
+        max_forecast_size = 3
+        print("optimalbuy buy default window=3")
+        
+    rolling_max_close_diff = ((df['close-1_5min'].rolling(window=window).max().shift(-window+1) / df['close']) - 1).fillna(0)
+    df['buy']=(rolling_max_close_diff >= mino).astype(int)
+    
+    # Compute rolling minimum values
+    window_list=[window]#[3, 5, 7, 10, 15, 20]
+    
+    for window_size in window_list:
+        col_name = f'ismin{window_size}'
+        rolling_min = (df['close'].shift(after_dip_val) <= df.shift(-window_size-1)['close-1_5min'].rolling(2*window_size).min())
+        df = df.assign(**{col_name: rolling_min.astype(int)})
+
+    df['ismin'] = df[[f'ismin{window_size}' for window_size in window_list ]].any(axis=1).astype(int)        
+
+    # # Compute buy and sell signals
+    rolling_low_close_diff =  ((df['low-1_5min'].rolling(window=int(window/2)).min().shift(-int(window/2)+1)/ df['close'] ) -1).fillna(0)
+    df['sell'] = (rolling_low_close_diff <= -maxo).astype(int)
+
+    
+    # Compute final buy signal
+    df['buy'] = ((df['buy'] == 1) & (df['sell'] == 0) & (df['ismin'] == 1)).astype(int)
+    # Remove unnecessary columns
+    df = df.drop(columns=['sell', 'ismin'] + [f'ismin{window_size}' for window_size in window_list], errors='ignore')
+    return df
+
+def day_expand(data_full):
+    ser = pd.to_datetime(pd.Series(data_full.index))
+    data_full["day"]=ser.dt.isocalendar().day.values
+    data_full["hour"]=ser.dt.hour.values
+    data_full["minute"]=ser.dt.minute.values
+    
+
+def Meta_expand(data_full,metadt,pair):
+    data_full["lunch_day"]=int(-(pd.to_datetime(metadt[metadt["Pair"] == pair]["launch_minute"])-pd.Timestamp('2020-01-01 00:00:00.000000')).dt.days)
+
+def human_pct(float_pct,type_string="Precent Mean",ShowMessage=True):
+    nb=round(float_pct*100,3)
+    if ShowMessage: print(type_string+": "+"{:.3f}".format(nb)+"%")
+    return nb
+hp=human_pct
+
+
+def expand_previous(dataframe, window=10):
+    df = dataframe.copy()
+    if window >= len(df):
+        for i in range(1, window+1):
+            df.loc[window:len(df),"high-"+str(i)]=None
+            df.loc[window:len(df),"low-"+str(i)]=None
+            #df.loc[window:len(df),"open-"+str(i)]=None            
+            df.loc[window:len(df),"close-"+str(i)]=None            
+            df.loc[window:len(df),"volume-"+str(i)]=None
+        window=len(df)
+
+    for i in range(1, window+1):
+        try:
+            df.loc[window:len(df),"high-"+str(i)]=None
+            df["high-"+str(i)].iloc[window:len(df)]=df["high"][window-i:len(df)-i].to_list()
+
+            df.loc[window:len(df),"low-"+str(i)]=None
+            df["low-"+str(i)].iloc[window:len(df)]=df["low"][window-i:len(df)-i].to_list()
+
+            # df.loc[window:len(df),"open-"+str(i)]=None
+            # df["open-"+str(i)].iloc[window:len(df)]=df["open"][window-i:len(df)-i].to_list()           
+            
+            df.loc[window:len(df),"close-"+str(i)]=None
+            df["close-"+str(i)].iloc[window:len(df)]=df["close"][window-i:len(df)-i].to_list()            
+            
+            df.loc[window:len(df),"volume-"+str(i)]=None
+            df["volume-"+str(i)].iloc[window:len(df)]=df["volume"][window-i:len(df)-i].to_list()
+            
+            # df["high-"+str(i)][i:] = df["high"][i-1:]
+            # df["low-"+str(i)][i:] = df["low"][i-1:]
+            # df["open-"+str(i)][i:] = df["open"][i-1:]
+            # df["close-"+str(i)][i:] = df["close"][i-1:]
+            # df["volume-"+str(i)][i:] = df["volume"][i-1:]
+        except:
+            prerr("Error in     expand_previous: " +str(i))
+    if window >= len(df): return df       
+    return df.iloc[window:]
+
+
+def rapid1d_expand(df1m,df1d,window=2):
+    d1min=df1m.copy()
+    d1day=df1d.loc[
+    d1min.index[0].round(freq='1d')-pd.Timedelta(str(window)+' day'):
+    d1min.index[len(d1min)-1].round(freq='1d')+pd.Timedelta('1 day')
+    ].copy()
+    d1day_pre=expand_previous(d1day,window)
+    d1day_pre=d1day_pre.drop(columns=['open', 'low','close','high','volume'])
+    d1day_pre=d1day_pre.add_suffix("_day")
+    d1min=pd.merge_asof(
+        d1min, d1day_pre, on=None, left_on=None, right_on=None, left_index=True, 
+        right_index=True, by=None, left_by=None, right_by=None, 
+        suffixes=('', '_day'),
+        tolerance=pd.Timedelta('1 day'), allow_exact_matches=True, direction='backward')
+    return d1min
+
+def rapid1h_expand(df1m,df1h,window=2):
+    d1min=df1m.copy()
+    d1hour=df1h.loc[
+    d1min.index[0].round(freq='H')-pd.Timedelta(str(window)+' hour'):
+    d1min.index[len(d1min)-1].round(freq='H')+pd.Timedelta('1 hour')
+    ].copy()
+    d1hour_pre=expand_previous(d1hour,window)
+    d1hour_pre=d1hour_pre.drop(columns=['open', 'low','close','high','volume'])
+    d1hour_pre=d1hour_pre.add_suffix("_hour")
+    d1min=pd.merge_asof(
+    d1min, d1hour_pre, on=None, left_on=None, right_on=None, left_index=True, 
+    right_index=True, by=None, left_by=None, right_by=None, 
+    suffixes=('', '_hour'),
+    tolerance=pd.Timedelta('1 hour'), allow_exact_matches=True, direction='backward')
+    return d1min
+
+
+def rapid5m_expand(df1m,df5m,window=2):
+    d1min=df1m.copy()
+    d5min=df5m.loc[
+    d1min.index[0].round(freq='5 min')-pd.Timedelta(str(window*5+10)+' min'):
+    d1min.index[len(d1min)-1].round(freq='5 min')+pd.Timedelta('5 min')
+    ].copy()
+    d5min_pre=expand_previous(d5min,window)
+    d5min_pre=d5min_pre.drop(columns=['open', 'low','close','high','volume'])
+    d5min_pre=d5min_pre.add_suffix("_5min")
+    d1min=pd.merge_asof(
+    d1min, d5min_pre, on=None, left_on=None, right_on=None, left_index=True, 
+    right_index=True, by=None, left_by=None, right_by=None, 
+    suffixes=('', '_5min'),
+    tolerance=pd.Timedelta('5 min'), allow_exact_matches=True, direction='backward')
+    return d1min
+
+def rapid15m_expand(df1m,df15m,window=2):
+    d1min=df1m.copy()
+    d15min=df15m.loc[
+    d1min.index[0].round(freq='15 min')-pd.Timedelta(str(window*15+30)+' min'):
+    d1min.index[len(d1min)-1].round(freq='15 min')+pd.Timedelta('15 min')
+    ].copy()
+    d15min_pre=expand_previous(d15min,window)
+    d15min_pre=d15min_pre.drop(columns=['open', 'low','close','high','volume'])
+    d15min_pre=d15min_pre.add_suffix("_15min")
+    d1min=pd.merge_asof(
+    d1min, d15min_pre, on=None, left_on=None, right_on=None, left_index=True, 
+    right_index=True, by=None, left_by=None, right_by=None, 
+    suffixes=('', '_15min'),
+    tolerance=pd.Timedelta('15 min'), allow_exact_matches=True, direction='backward')
+    return d1min
+
+
+def full_expand(df1m,df5m,df15m,df1h,df1d,window=10):
+    d1min=df1m.copy()
+    d1min=expand_previous(d1min,window=window).drop(columns=["volume"])
+    d1min=rapid1d_expand(d1min,df1d,window)
+    d1min=rapid1h_expand(d1min,df1h,window)
+    d1min=rapid15m_expand(d1min,df15m,window)
+    d1min=rapid5m_expand(d1min,df5m,window)
+    return d1min
+
+def full_expand_costum(df1m,df5m,df15m,df1h,df1d,w1m=10,w5m=30,w15m=30,w1h=3,w1d=7):
+    d1min=df1m.copy()
+    d1min=expand_previous(d1min,window=w1m).drop(columns=["volume"])
+    d1min=rapid1d_expand(d1min,df1d,w1d)
+    d1min=rapid1h_expand(d1min,df1h,w1h)
+    d1min=rapid15m_expand(d1min,df15m,w15m)
+    d1min=rapid5m_expand(d1min,df5m,w5m)
+    return d1min
+
+def maxi_expand(pair="GMT/USDT", i=0, j=10000, window=2, metadata=MetaData,
+                 high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                 buy_function=buy_alwase,
+                 w1m=6,w5m=30,w15m=30,w1h=3,w1d=7,btc_w1m=6,btc_w5m=4,btc_w15m=5,btc_w1h=30,btc_w1d=30):
+    start_index=i
+    end_index=j
+    window_size=window
+    buy_fn=buy_function
+  
+    print(f"maxi custum expend : {pair} with those parameters: w1m={w1m},w5m={w5m},w15m={w15m},w1h={w1h},w1d={w1d} btc_w1m={btc_w1m},btc_w5m={btc_w5m},btc_w15m={btc_w15m},btc_w1h={btc_w1h},btc_w1d={btc_w1d}")
+    # Select data
+    pair_df = df_list1m[pair].iloc[start_index:end_index]
+    btc_df = df_list1m["BTC/USDT"].loc[(pair_df.index[0] - pd.DateOffset(days=window_size+1)).round(freq='1 min'):pair_df.index[-1]+pd.Timedelta(f"{window_size} day")]
+    # Calculate technical indicators
+    pair_full = full_expand_costum(pair_df, df_list5m[pair], df_list15m[pair], df_list1h[pair], df_list1d[pair],w1m=w1m,w5m=w5m,w15m=w15m,w1h=w1h,w1d=w1d)
+    btc_full = full_expand_costum(btc_df, df_list5m["BTC/USDT"], df_list15m["BTC/USDT"], df_list1h["BTC/USDT"], df_list1d["BTC/USDT"], w1m=btc_w1m,w5m=btc_w5m,w15m=btc_w15m,w1h=btc_w1h,w1d=btc_w1d)   
+    btc_full = btc_full.add_prefix("BTC_")
+    merged = pd.merge(pair_full, btc_full, left_index=True, right_index=True)
+    day_expand(merged)
+    Meta_expand(merged, metadata, pair)
+    print(merged.columns)
+    merged = buy_fn(merged, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=MAX_FORCAST_SIZE)
+    merged["high"] = (merged["open"] + high_weight * merged["high"] + merged["low"] + merged["close"]) / (3 + high_weight)
+    merged["BTC_high"] = (merged["BTC_open"] + high_weight * merged["BTC_high"] + merged["BTC_low"] + merged["BTC_close"]) / (3 + high_weight)
+    merged.rename(columns={"high":"price"},inplace=True)
+    merged.rename(columns={"BTC_high":"BTC_price"},inplace=True)
+    merged = merged.drop(columns=["BTC_open","BTC_low","BTC_close","open","low","close"])
+    open_high_low_close_cols = merged.columns.str.contains("open|high|low|close")
+    # merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")] = (
+    #     (merged["BTC_price"] - merged.loc[:, open_high_low_close_cols & merged.columns.str.contains("BTC")]) / merged["BTC_price"]
+    # )
+    # merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")] = (
+    #     (merged["price"] - merged.loc[:, open_high_low_close_cols & ~merged.columns.str.contains("BTC")]) / merged["price"]
+    # )
+    for key in merged.keys():
+        if key.find("BTC")!=-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["BTC_price"]-merged[key])/merged["BTC_price"]
+        if key.find("BTC")==-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=(merged["price"]-merged[key])/merged["price"]
+
+    merged=merged.dropna()
+    print(f'######################  max expend {pair} - shape {merged.shape}  buy mean : {hp(merged.buy.mean())} ############################')
+    return merged
+
+
+# def expand_previous(dataframe, window=10):
+#     df = dataframe.copy()
+#     if window >= len(df):
+#         for i in range(1, window+1):
+#             df.loc[window:len(df),"high-"+str(i)]=None
+#             df.loc[window:len(df),"low-"+str(i)]=None
+#             #df.loc[window:len(df),"open-"+str(i)]=None            
+#             df.loc[window:len(df),"close-"+str(i)]=None            
+#             df.loc[window:len(df),"volume-"+str(i)]=None
+#         window=len(df)
+
+
+def maxi_expand_v3(pair="GMT/USDT", i=0, j=10000, TIME_WINDOW=15, metadata=MetaData,
+                 high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                 buy_function=buy_alwase,
+                 w1m=6,w5m=30,w15m=30,w1h=3,w1d=7,
+                 btc_w1m=6,btc_w5m=4,btc_w15m=5,btc_w1h=30,btc_w1d=30,
+                 df_list1m=df_list1m,df_list5m=df_list5m, df_list15m=df_list15m, df_list1h=df_list1h, df_list1d=df_list1d
+                 ):
+    start_index=i
+    end_index=j
+    window=TIME_WINDOW
+    window_size=window
+    buy_fn=buy_function
+
+    print(f"maxi custum expend : {pair} with those parameters: w1m={w1m},w5m={w5m},w15m={w15m},w1h={w1h},w1d={w1d} btc_w1m={btc_w1m},btc_w5m={btc_w5m},btc_w15m={btc_w15m},btc_w1h={btc_w1h},btc_w1d={btc_w1d}")
+    # Select data
+    pair_df = df_list1m[pair].iloc[start_index:end_index]
+    btc_df = df_list1m["BTC/USDT"].loc[(pair_df.index[0] - pd.DateOffset(days=window_size+1)).round(freq='1 min'):pair_df.index[-1]+pd.Timedelta(f"{window_size} day")]
+    # Calculate technical indicators
+    pair_full = full_expand_costum(pair_df, df_list5m[pair], df_list15m[pair], df_list1h[pair], df_list1d[pair],w1m=w1m,w5m=w5m,w15m=w15m,w1h=w1h,w1d=w1d)
+    btc_full = full_expand_costum(btc_df, df_list5m["BTC/USDT"], df_list15m["BTC/USDT"], df_list1h["BTC/USDT"], df_list1d["BTC/USDT"], w1m=btc_w1m,w5m=btc_w5m,w15m=btc_w15m,w1h=btc_w1h,w1d=btc_w1d)   
+    btc_full = btc_full.add_prefix("BTC_")
+    merged = pd.merge(pair_full, btc_full, left_index=True, right_index=True)
+    day_expand(merged)
+    Meta_expand(merged, metadata, pair)
+    print(merged.columns)
+    merged = buy_fn(merged, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=TIME_WINDOW)
+    merged["high"] = (merged["open"] + high_weight * merged["high"] + merged["low"] + merged["close"]) / (3 + high_weight)
+    merged["BTC_high"] = (merged["BTC_open"] + high_weight * merged["BTC_high"] + merged["BTC_low"] + merged["BTC_close"]) / (3 + high_weight)
+    merged.rename(columns={"high":"price"},inplace=True)
+    merged.rename(columns={"BTC_high":"BTC_price"},inplace=True)
+    merged = merged.drop(columns=["BTC_open","BTC_low","BTC_close","open","low","close"]) 
+    for key in merged.keys():
+        if key.find("BTC")!=-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=1-(merged[key])/merged["BTC_price"]
+        if key.find("BTC")==-1 and (key.find("open")!=-1 or
+    key.find("high")!=-1 or key.find("low")!=-1 or key.find("close")!=-1):
+            merged[key]=1-(merged[key])/merged["price"]
+
+    merged=merged.dropna()
+    print(f'######################  max expend {pair} - shape {merged.shape}  buy mean : {hp(merged.buy.mean())} ############################')
+    return merged
+
+def generate_signals_costum(ALLTOP20VOLUMES, df_list1m, HoldingTime, MetaData, TAKE_PROFIT, STOP_LOSS, backtest_model,
+                           w1m=6,w5m=10,w15m=25,w1h=8,w1d=7,
+                           btc_w1m=6,btc_w5m=4,btc_w15m=5,btc_w1h=12,btc_w1d=15):
+    SIGNAL_DF = pd.DataFrame(columns=['coin', 'time', 'price', 'note'])
+    for day, TOPLIST in ALLTOP20VOLUMES.items():
+        for coin in TOPLIST:
+            try:
+                pdebug(f">>>>>>>>>>> working on {coin} at: {day} :")
+                loc_start = df_list1m[coin].index.get_loc(day)
+                loc_end = df_list1m[coin].index.get_loc(day+pd.Timedelta('1 day'))
+                gc.collect()
+                # df = maxi_expand_v3(pair=coin, i=loc_start, j=loc_end, TIME_WINDOW=3, metadata=MetaData, BUY_PCT=TAKE_PROFIT, SELL_PCT=STOP_LOSS,high_weight=1, buy_function=buy_alwase,
+                #            w1m=w1m,w5m-w5m,w15m=w15m,w1h=w1h,w1d=w1d,
+                #            btc_w1m=btc_w1m,btc_w5m=btc_w5m,btc_w15m=btc_w15m,btc_w1h=btc_w1h,btc_w1d=btc_w1d)
+                df = maxi_expand_v3(pair=coin, i=loc_start, j=loc_end, TIME_WINDOW=3, metadata=MetaData,
+                                    high_weight=1, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT,
+                                    buy_function=buy_alwase,
+                                    w1m=w1m,w5m=w5m,w15m=w15m,w1h=w1h,w1d=w1d,
+                                    btc_w1m=btc_w1m,btc_w5m=btc_w5m,btc_w15m=btc_w15m,btc_w1h=btc_w1h,btc_w1d=btc_w1d)
+                
+                dt = df.iloc[:,:-1].to_numpy(dtype=np.float32)
+                predictions_note = backtest_model.predict(dt)
+                predictions_round = predictions_note.round()
+                dico_signal = {"coin":coin, "time":df[predictions_round==1].index.values, "price":df[predictions_round==1]["price"].values, "note":predictions_note[predictions_round==1]}
+                df_signal_coin = pd.DataFrame(dico_signal)
+                SIGNAL_DF = pd.concat([SIGNAL_DF, df_signal_coin])
+            except:
+                pdebug(f"error at {day} in {coin}")
+    return SIGNAL_DF
+
+
+
+
+####### New functions : ###########
+def expand_previous_v2(dataframe, window=10):
+    """
+    The new implementation first checks if the window parameter is greater than or equal to the length of the DataFrame. If so, it creates a new DataFrame with the desired number of columns and returns it.
+
+    If the window parameter is less than the length of the DataFrame, the function uses Pandas' rolling method to compute a rolling window over the "high", "low", "close", and "volume" columns of the DataFrame. 
+    The resulting rolling window DataFrame is then transformed into a new DataFrame with columns for each previous value of the "high", "low", "close", and "volume" columns, using a nested list comprehension. 
+    Finally, the function concatenates the original DataFrame and the new DataFrame and returns the modified DataFrame with the previous values columns.
+
+    This implementation should be faster and more memory-efficient than the original implementation, especially for large DataFrames with many rows and columns.
+    """
+    df = dataframe.copy()
+    if window >= len(df):
+        df = df.reindex(columns=[col+"-"+str(i) for i in range(1, window+1) for col in ["high", "low", "close", "volume"]])
+        return df
+
+    window_cols = df[["high", "low", "close", "volume"]].rolling(window, min_periods=1)
+    window_cols = window_cols.apply(lambda x: pd.Series(x.values))
+    window_cols.columns = [col+"-"+str(i) for i in range(1, window+1) for col in ["high", "low", "close", "volume"]]
+    df = pd.concat([df, window_cols], axis=1)
+    df = df.iloc[window:]
+    return df
+
+
+def rapid1d_expand_v2(df1m, df1d, window=2):
+    # Resample df1d to daily frequency and shift by the window size
+    d1day = df1d.resample('D').ffill().shift(window).iloc[window:-1].copy()
+
+    # Compute the rolling window for d1day and drop original columns
+    d1day_pre = d1day.rolling(window, min_periods=1, closed='right')
+    d1day_pre = d1day_pre.apply(lambda x: pd.Series(x.values))
+    d1day_pre = d1day_pre.drop(columns=['open', 'low', 'close', 'high', 'volume'])
+    d1day_pre = d1day_pre.add_suffix("_day")
+
+    # Merge the rolling window with df1m using the timestamp as the join key
+    d1min = pd.merge(df1m, d1day_pre, how='left', left_index=True, right_index=True)
+
+    return d1min
+
+
+def rapid_expand_v2(df1m, df1d,suffix="_day" window=2):
+    # Resample df1d to daily frequency and shift by the window size
+    d1day = df1d.resample('D').ffill().shift(window).iloc[window:-1].copy()
+
+    # Compute the rolling window for d1day and drop original columns
+    d1day_pre = d1day.rolling(window, min_periods=1, closed='right')
+    d1day_pre = d1day_pre.apply(lambda x: pd.Series(x.values))
+    d1day_pre = d1day_pre.drop(columns=['open', 'low', 'close', 'high', 'volume'])
+    d1day_pre = d1day_pre.add_suffix(suffix)
+
+    # Merge the rolling window with df1m using the timestamp as the join key
+    d1min = pd.merge(df1m, d1day_pre, how='left', left_index=True, right_index=True)
+
+    return d1min
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print("back test module is loaded !")

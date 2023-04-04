@@ -1,3 +1,10 @@
+
+import gc
+from collections import defaultdict
+from functools import partial
+import ccxt
+import json
+import os
 #################### Files #################
 
 DATABASE_DIR="./database"
@@ -10,7 +17,7 @@ BINANCE_TRADES_DATA_DIR=f"{DATABASE_DIR}/OpenBinance/Trades"
 METADATA_FILE=f"{INFO_DIR}/METADATA.csv"
 COINGEKO_INFO_FILE=f"{INFO_DIR}/COINGEKO_INFO_FILE.csv"
 ########### data info ################
-
+USE_TRAILING_STOP_LOSS= False
 ### Data functions
 
 def get_all_binance_tickers():
@@ -28,7 +35,7 @@ def get_all_binance_tickers():
         return ticker_list
 
     
-def get_my_halal_list(halal_file=halal_list_file_path):
+def get_my_halal_list(halal_file=halal_list_file_path,ticker_list = ALL_BINANCE_TICKERS):
     
     try:
         with open(ONLY_MY_HALAL_LIST_FILE, "r") as f:
@@ -231,10 +238,6 @@ def get_backtest_historical(exchange, symbol, timeframe, path="database/"):
     return df
 
 
-import gc
-from collections import defaultdict
-from functools import partial
-import ccxt
 
 def get_historical_dataframes(working_pairs, oldest_pair="BTC/USDT", timeframes=("1m", "1d", "1h", "5m", "15m"), path="./database/"):
     if oldest_pair not in working_pairs:
