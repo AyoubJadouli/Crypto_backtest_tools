@@ -1,4 +1,6 @@
 from xdata_config import *
+import re
+
 
 #DATA_FILE=DATA_DIR+'w'+str(WINDOW_SIZE)+'_EXTData.csv'
 
@@ -2189,22 +2191,25 @@ def add_technical_indicators(df):
 ## Ploter
 import matplotlib.pyplot as plt
 
-def plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, window_size, PREDICTION_TO_TEST,dot_color="g"):
-    i_end=i_start+window_size
+def plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, window_size, PREDICTION_TO_TEST, dot_color="g", fig_width=20, fig_height=5):
+    # display(HTML("<style>.container { width:100% !important; }</style>"))
+    i_end = i_start + window_size
     mname = Model_FileName.replace("/UltimeTradingBot/Data","")
     coin = pair_to_test.replace('/', '-')
     mtitle = f"{coin} WinRatio:{hp(winratio)}% - {mname}".replace("/", "-")
-    
+
     x = np.linspace(0, 10, 500)
     dashes = []  # 10 points on, 5 off, 100 on, 5 off
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     line1, = ax.plot(OnePair_DF.index[i_start:i_end], OnePair_DF.price[i_start:i_end], '-', linewidth=1,
                  label='price',c="w")
     line1.set_dashes(dashes)
     plt.plot(OnePair_DF[i_start:i_end][PREDICTION_TO_TEST[i_start:i_end]==1].index, OnePair_DF[i_start:i_end][PREDICTION_TO_TEST[i_start:i_end]==1].price, 'ro',c=dot_color,markersize=5)
     plt.title(mtitle)
-    
+
     plt.show()
+
+#plot_data(Model_FileName, pair_to_test, winratio, OnePair_DF, i_start, 300, PREDICTION_TO_TEST,dot_color="g")
 
 
 

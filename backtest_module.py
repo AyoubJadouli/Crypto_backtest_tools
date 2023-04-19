@@ -635,7 +635,8 @@ def calculate_wins_losses(trade_history):
                 losses += 1
 
             del open_positions[symbol]
-    print(f"total trades {wins+losses} whith {wins} win ({(100*wins/(wins+losses)):.2f}%) and {losses} losses ({(100*losses/(wins+losses)):.2f}%) ")
+    try:print(f"total trades {wins+losses} whith {wins} win ({(100*wins/(wins+losses)):.2f}%) and {losses} losses ({(100*losses/(wins+losses)):.2f}%) ")
+    except:print(f"total trades {wins+losses} whith {wins} win / {losses} losses  ")
     return wins, losses
 
 
@@ -666,7 +667,22 @@ def get_back_test_metrics(PORTFOLIO):
         'top_10_wins': top_10_wins,
         'top_10_losses': top_10_losses
     }
+    
+    print(f"Initial Investment: {initial_investment:.2f} {PAIR_WITH}")
+    print(f"Final Value: {final_value:.2f} {PAIR_WITH}")
+    print(f"Profit: {profit:.2f} {PAIR_WITH}")
+    print(f"Return on Investment (ROI): {roi:.2f}%")
 
+    # Draw plot of total assets
+    plt.plot(PORTFOLIO.index, PORTFOLIO[f"total_{PAIR_WITH}"], label="Total Assets")
+    plt.scatter(top_10_wins.index, top_10_wins[f"total_{PAIR_WITH}"], color='g', label='Top 10 Wins')
+    plt.scatter(top_10_losses.index, top_10_losses[f"total_{PAIR_WITH}"], color='r', label='Top 10 Losses')
+    plt.xlabel("Time")
+    plt.ylabel(f"Total {PAIR_WITH}")
+    plt.title("Total Assets Value Over Time")
+    plt.legend()
+    plt.grid()
+    plt.show()
     return metrics
 
 # # Call the function and get the metrics dictionary
@@ -1147,7 +1163,7 @@ def rapid1d_expand_v2(df1m, df1d, window=2):
     return d1min
 
 
-def rapid_expand_v2(df1m, df1d,suffix="_day" window=2):
+def rapid_expand_v2(df1m, df1d,suffix="_day", window=2):
     # Resample df1d to daily frequency and shift by the window size
     d1day = df1d.resample('D').ffill().shift(window).iloc[window:-1].copy()
 

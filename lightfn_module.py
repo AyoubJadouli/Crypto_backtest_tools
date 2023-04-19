@@ -35,7 +35,7 @@ def get_all_binance_tickers():
         return ticker_list
 
     
-def get_my_halal_list(halal_file=halal_list_file_path,ticker_list = ALL_BINANCE_TICKERS):
+def get_my_halal_list(halal_file=halal_list_file_path,ticker_list = []):
     
     try:
         with open(ONLY_MY_HALAL_LIST_FILE, "r") as f:
