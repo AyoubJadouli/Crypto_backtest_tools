@@ -831,3 +831,25 @@ Having high-quality data and reducing noise is crucial for training a deep MLP o
 
     Test the model: Finally, it is important to test the model thoroughly using a separate validation dataset to ensure that it is performing well on new, unseen data. This can help to identify and address any remaining issues with noise or data quality.
 
+### To retest:
+======================== TP:1.7 , SL:15 , MHT:1440 Model:/UltimeTradingBot/Data/IS_CLOSE/tp130_w25_max25min_ModelModel_Re3.h5   ===========================================
+Testing model: /UltimeTradingBot/Data/IS_CLOSE/tp130_w25_max25min_ModelModel_Re3.h5 
+Initial Investment: 550.00 USDT
+Final Value: 562.63 USDT
+Profit: 12.63 USDT
+Return on Investment (ROI): 2.30%
+
+
+=========================== TP:3.1 , SL:15 , MHT:1440 Model:/UltimeTradingBot/Data/IS_CLOSE/tp130_w25_max25min_ModelModel_Re3.h5   ===========================================
+Testing model: /UltimeTradingBot/Data/IS_CLOSE/tp130_w25_max25min_ModelModel_Re3.h5 
+Initial Investment: 550.00 USDT
+Final Value: 564.31 USDT
+Profit: 14.31 USDT
+Return on Investment (ROI): 2.60%
+
+=========================== TP:1.7 , SL:15 , MHT:1440 Model:/UltimeTradingBot/Data/IS_CLOSE/tp310_w40_max40min_Model_true_win_model_Re18.h5   ===========================================
+Testing model: /UltimeTradingBot/Data/IS_CLOSE/tp310_w40_max40min_Model_true_win_model_Re18.h5 
+Initial Investment: 550.00 USDT
+Final Value: 551.65 USDT
+Profit: 1.65 USDT
+Return on Investment (ROI): 0.30%

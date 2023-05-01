@@ -24,7 +24,7 @@ import json
 
 #from utilities.backtesting import plot_wallet_vs_asset, get_metrics, get_n_columns, basic_multi_asset_backtest, plot_sharpe_evolution, plot_bar_by_month
 #from utilities.custom_indicators import SuperTrend
-pd.options.mode.chained_assignment = None  # default='warn'
+pd.options.mode.chained_assignment = None  # default='warn' # type: ignore
 import gc
 gc.collect()    
 import ccxt
@@ -68,7 +68,7 @@ def prerr(err):
         print("\033[0;31m Error in "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
 
 PDEBUG=True
-def pdebug(err):
+def pdebug(err): # type: ignore
     if PDEBUG:
         print("\033[0;31m Error in "+str(sys._getframe().f_code.co_name) +" \033[0;33m"+str(err))
         
@@ -337,7 +337,7 @@ def check_metadata(pair_list):
             pair_list_plus.append(pair)
     if pair_list_plus:
         MetaDataPlus=get_crypto_metadata(pair_list_plus)
-        MetaData.concat([MetaData,MetaDataPlus])
+        MetaData.concat([MetaData,MetaDataPlus]) # type: ignore
         MetaData.to_csv("../Data/MetaData.csv")    
     
 
@@ -998,7 +998,7 @@ def buy_sell(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
     exec(code)
     df["bs"]=((df['buy']==1 ) & (df['sell']==0)).replace({False: 0, True: 1})
 
-def buy_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3):
+def buy_only(df,BUY_PCT=BUY_PCT,SELL_PCT=SELL_PCT,window=3): # type: ignore
     mino=BUY_PCT*0.01
     maxo=-SELL_PCT*0.01
     codep1='df["buy"]=((('
@@ -1033,7 +1033,7 @@ def Meta_expand(data_full,metadt,pair):
 def mini_expand(pair="LTC/USDT",i=0,j=10000,window=2):
     Pair_Full=full_expand(df_list1m[pair].iloc[i:j],df_list5m[pair],df_list15m[pair],df_list1h[pair],df_list1d[pair],window)
     BTC_Full=full_expand(
-        df_list1m["BTC/USDT"].loc[Pair_Full.iloc[0].name-pd.Timedelta(str(window-1) +" min"):Pair_Full.iloc[len(Pair_Full)-1].name],
+        df_list1m["BTC/USDT"].loc[Pair_Full.iloc[0].name-pd.Timedelta(str(window-1) +" min"):Pair_Full.iloc[len(Pair_Full)-1].name], # type: ignore
         df_list5m["BTC/USDT"],
         df_list15m["BTC/USDT"],
         df_list1h["BTC/USDT"],
@@ -1098,7 +1098,7 @@ def mini_expand3(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData,high_wei
 def mini_expand3old(pair="LTC/USDT",i=0,j=10000,window=2,metadata=MetaData,high_weight=3):
     Pair_Full=full_expand(df_list1m[pair].iloc[i:j],df_list5m[pair],df_list15m[pair],df_list1h[pair],df_list1d[pair],window)
     BTC_Full=full_expand(
-        df_list1m["BTC/USDT"].loc[Pair_Full.iloc[0].name-pd.Timedelta(str(window) +" min"):Pair_Full.iloc[len(Pair_Full)-1].name],
+        df_list1m["BTC/USDT"].loc[Pair_Full.iloc[0].name-pd.Timedelta(str(window) +" min"):Pair_Full.iloc[len(Pair_Full)-1].name], # type: ignore
         df_list5m["BTC/USDT"],
         df_list15m["BTC/USDT"],
         df_list1h["BTC/USDT"],
@@ -1195,7 +1195,7 @@ def data_chooser(df,weight=50,row_numbers=100000):
     
     
 #from imblearn.over_sampling import RandomOverSampler
-def data_chooser50(df,row_numbers=100000):
+def data_chooser50(df,row_numbers=100000): # type: ignore
     
     df=data_shufler(df)
     if row_numbers>=len(df):
@@ -2553,3 +2553,134 @@ def is_high_win(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
     df['buy'] = (win).astype(int)
 
     return df
+
+def is_local_min_plus_5(df, BUY_PCT=BUY_PCT, SELL_PCT=SELL_PCT, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is 5 minutes after a local minimum.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    window (int): The window size for computing local minimum.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating 5 minutes after a local minimum.
+    """
+    # Compute rolling minimum close
+    rolling_min_close = df['close'].rolling(window=window, center=True, min_periods=1).min()
+
+    # Check if close price is a local minimum
+    local_min = (df['close'] == rolling_min_close).astype(int)
+
+    # Shift local minimum by 5 rows
+    local_min_plus_5 = local_min.shift(5).fillna(0).astype(int)
+
+    # Add the local minimum column to the DataFrame
+    df['buy'] = local_min_plus_5
+
+    return df
+
+    
+    
+def is_good_to_buy(df, BUY_PCT=2, SELL_PCT=1, window=5):
+    """
+    Add a binary column to the OHLCV DataFrame to indicate if the close price in the row is near a local minimum and satisfies the BUY_PCT and SELL_PCT conditions.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the OHLCV data.
+    BUY_PCT (float): The minimum percentage increase required for the next window price.
+    SELL_PCT (float): The maximum percentage decrease allowed for the next window price.
+    window (int): The window size for computing local minimum.
+
+    Returns:
+    pandas.DataFrame: The input DataFrame with an additional column indicating local minimum.
+    """
+    # Compute rolling minimum close
+    rolling_min_close = df['close'].rolling(window=window*2, center=True, min_periods=1).min()
+
+    # Check if close price is near a local minimum
+    local_min = (df['close'] <= rolling_min_close * (1 + SELL_PCT/100) ).astype(int)
+
+    # Check the BUY_PCT condition
+    df['next_window_max'] = df['high'].shift(-window).rolling(window=window, min_periods=1).max()
+    buy_pct_condition = (df['next_window_max'] >= df['close'] * (1 + BUY_PCT/100)).astype(int)
+
+    # Check the SELL_PCT condition
+    df['next_window_min'] = df['low'].shift(-window).rolling(window=window, min_periods=1).min()
+    sell_pct_condition = (df['next_window_min'] >= df['close'] * (1 - SELL_PCT/100)).astype(int)
+
+    # Combine the conditions and add the 'buy' column to the DataFrame
+    df['buy'] = local_min * buy_pct_condition * sell_pct_condition
+
+    # Drop the temporary columns
+    df.drop(columns=['next_window_max', 'next_window_min'], inplace=True)
+
+    return df
+
+############# multi models ############################
+import numpy as np
+from tensorflow.keras.models import load_model
+
+def load_models(model_files):
+    """
+    Load Keras models from a list of .h5 files.
+
+    Args:
+        model_files (list): A list of .h5 file paths containing Keras models.
+
+    Returns:
+        list: A list of loaded Keras models.
+    """
+    return [load_model(model_file) for model_file in model_files]
+
+def predict_multi(models, input_data):
+    """
+    Make predictions using a list of Keras binary classification models with the same input shape.
+
+    Args:
+        models (list): A list of Keras models.
+        input_data (list or np.array): Input data for making predictions.
+
+    Returns:
+        np.array: Predicted class labels with the highest ensemble probability.
+    """
+    # Ensure input data is a NumPy array
+    input_data = np.array(input_data)
+    
+    # Make predictions using each model
+    predictions = [model.predict(input_data) for model in models]
+
+    # Average the predictions to get an ensemble prediction
+    ensemble_prediction = np.mean(predictions, axis=0)
+
+    # Return the class with the highest ensemble probability
+    return ensemble_prediction#np.argmax(ensemble_prediction, axis=1)
+# Example usage
+# model_files = ['model1.h5', 'model2.h5', 'model3.h5']
+# models = load_models(model_files)
+# input_data = [[0.1, 0.5, 0.3, 0.9], [0.6, 0.4, 0.7, 0.2]]  # Replace with your input data
+# best_predictions = predict_multi(models, input_data)
+# print(best_predictions)
+
+###############################################################
+
+import pandas as pd
+from pathlib import Path
+
+def append_and_save_results(results_dict, excel_file_path, sheet_name='Sheet1'):
+    # Convert the dictionary to a DataFrame
+    results_df = pd.DataFrame([results_dict])
+
+    # Check if the Excel file exists
+    if Path(excel_file_path).is_file():
+        # Read the existing data into a DataFrame
+        existing_data = pd.read_excel(excel_file_path, sheet_name=sheet_name)
+        
+        # Append the new results to the existing data
+        updated_data = existing_data.append(results_df, ignore_index=True)
+        
+        # Save the updated data back to the Excel file
+        updated_data.to_excel(excel_file_path, sheet_name=sheet_name, index=False)
+    else:
+        # If the file does not exist, create a new Excel file with the results DataFrame
+        results_df.to_excel(excel_file_path, sheet_name=sheet_name, index=False)
+    return results_df
